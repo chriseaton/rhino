@@ -4,7 +4,7 @@
   "description": "Rhino is a Microsoft SQL Server driver for Node.JS, based on tedious and node-pool.",
   "main": "rhino.js",
   "scripts": {
-    "test": "npm test"
+    "test": "node ./node_modules/jest/bin/jest.js"
   },
   "repository": {
     "type": "git",

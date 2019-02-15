@@ -1,11 +1,20 @@
 const genericPool = require("generic-pool");
+const log = require('./log.js');
+const Resource = require('./resource.js');
 const Transaction = require('./transaction.js');
 
 class Rhino {
     constructor(config) {
 
+        /**
+         * @type {*}
+         */
         this.config = config || {};
 
+        /**
+         * @type {genericPool.Pool}
+         * @private
+         */
         this._pool = this._createPool(config.pool);
 
     }
@@ -30,34 +39,36 @@ class Rhino {
             min: 0,
             max: 10
         }, config, {
-            autostart: true
-        });
+                autostart: true
+            });
         return genericPool.createPool({
-            create: this._poolCreate,
-            destroy: this._poolDestroy,
-            validate: this._poolValidate
+            create: this._createResource.bind(this),
+            destroy: this._destroyResource.bind(this),
+            validate: this._validateResource.bind(this)
         }, config);
     }
 
-    _poolCreate() {
+    async _createResource() {
+        let r = new Resource();
+        await r.connect(this.config);
+        return r;
+    }
+
+    async _destroyResource(resource) {
 
     }
 
-    _poolDestroy(resource) {
-
-    }
-
-    _poolValidate(resource) {
+    async _validateResource(resource) {
 
     }
 
     async transaction() {
-        let conn = await this._pool.acquire();
-        return new Transaction(conn);
+        let res = await this._pool.acquire();
+        return new Transaction(res);
     }
 
     async query(sql, ...parameters) {
-
+        let res = await this._pool.acquire();
     }
 
 }

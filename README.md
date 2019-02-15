@@ -82,21 +82,18 @@ Here's a configuration object with most of the possible properties and default v
             "domain": ""
         }
     },
-    //pool options, see generic-pool documentation for more details
     "pool": {
         "max": 1,
         "min": 0,
-        //less common
         "maxWaitingClients": null,
         "acquireTimeoutMillis": null,
         "fifo": true,
         "priorityRange": 1,
-        "autostart": true, //we force this to always be true
+        "autostart": true, 
         "evictionRunIntervalMillis": 3,
         "softIdleTimeoutMillis": -1,
         "idleTimeoutMillis": 30000
     },
-    //less common options, see tedious documentation for more details
     "tdsVersion": "7_4",
     "dateFormat": "mdy",
     "fallbackToDefaultDb": false,
