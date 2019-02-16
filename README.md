@@ -143,3 +143,18 @@ let pool2 = rhino.create({
 #### ```#transaction```
 
 #### ```#query(@sql, ...@parameters)```
+
+## Unit Testing
+You will need to configure a Microsoft SQL Server. The user you connect with must be able to create a database, tables, and data, so it is recommended to use docker or a standalone non-production server.
+
+You can utilize the freely available docker Express version.
+```
+docker run -e 'ACCEPT_EULA=Y' -e 'SA_PASSWORD=YourStr0ng_PasswordHERE' -e 'MSSQL_PID=Express' -p 1433:1433 -d microsoft/mssql-server-linux:latest
+```
+
+Configure a `.env` file in the root project folder and define the variables for connecting:
+```
+RHINO_MSSQL_HOST = localhost
+RHINO_MSSQL_USER = sa
+RHINO_MSSQL_PASSWORD = YourStr0ng_PasswordHERE
+```
