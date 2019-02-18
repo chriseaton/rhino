@@ -169,8 +169,8 @@ class Rhino {
     }
 
     /**
-     * Creates a `genericPool.Pool` instance meant for internal use by the active `Rhino` instance. 
-     * @param {genericPool.Options} config - The generic-pool configuration options.
+     * Creates a pool instance meant for internal use by the active `Rhino` instance. 
+     * @param {genericPool.Options} config - The pool configuration options.
      * @returns {genericPool.Pool} 
      * @private
      */

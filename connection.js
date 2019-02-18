@@ -1,4 +1,4 @@
-const crypto = require('crypto');;
+const crypto = require('crypto');
 const tedious = require('tedious');
 const Log = require('./log.js');
 
