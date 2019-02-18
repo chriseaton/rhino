@@ -1,0 +1,137 @@
+# Rhino
+
+> !!New project - not ready yet!
+
+Rhino is a Node.js Microsoft SQL Server driver wrapper that incorporates pooling and is powered by the Microsoft-backed 
+[tedious](http://tediousjs.github.io/tedious/api-connection.html#function_newConnection) driver. 
+
+Rhino purposefully uses very few dependencies and is a solid SQL driver implementation built for production use. It 
+employs a pure promise and async/await enabled API usable in modern Node.JS programs. Additionally, Rhino makes 
+connection pooling management totally transparent - dealing with all the internal connection management for you. This 
+means you can focus on running queries, not managing connections.
+
+Rhino has several advantages over existing `tedious` wrappers:
+
+1. Pure async/await design.
+2. Works out-of-the box with vanilla `Promise`s.
+3. Automagic pooling. It's all handled for you.
+
+## Installation
+
+```sh
+npm i rhino --save
+```
+
+## Quick Start
+
+```js
+const rhino = require('rhino');
+
+...
+let pool = await rhino.create({
+    server: 'localhost',
+    authentication: {
+        options: {  
+            userName: "testuser",
+            password: "mypassword"
+        }
+    },
+    pool: {
+        min: 0,
+        max: 10
+    }
+});
+let results = await pool.query('SELECT * FROM dbo.People');
+console.log(`Count: ${results.count}`);
+console.log(results.rows);
+```
+
+### Transactions
+
+```js
+    let tx = null;
+    try {
+        tx = await pool.transaction();
+        let results = await tx
+            .query('INSERT INTO dbo.People (Code, FullName) VALUES (434,\'John Bircham\')')
+            .query('INSERT INTO dbo.People (Code, FullName) VALUES (@code, @name)', { code: 322, name: 'Amy Smith' })
+            .query('DELETE FROM dbo.People WHERE Code = 341')
+            .commit();
+        console.log('Transaction committed.');
+    } catch (err) {
+        if (tx) tx.rollback();
+        throw;
+    }
+```
+# API 
+
+{{>main}}
+
+# Project Maintenance
+
+## Unit Testing
+Unit-testing this driver requires a Microsoft SQL Server instance.
+Due to the fragile nature of the database unit-testing, and to avoid collisions with other users, it's recommended
+to use the process described below ([docker](https://www.docker.com/products/docker-engine) is required).
+
+### 1. Build the image.
+To get started, build our testing docker image:
+```
+docker build ./test --build-arg SA_PASSWORD="YourStr0ng_PasswordHERE" -t rhino:test
+```
+
+### 2. Run the container.
+You need to run the `rhino:test` container from the built image. This will spin up the server and run the install 
+script. It is usually ideal to run the container in daemon mode (`-d`), as the container will stay alive until stopped.
+
+```
+docker run -d -p 1433:1433 rhino:test
+```
+
+When run using the command above, the docker server will be accessible on localhost port 1433.
+
+### 3. Setup testing environment.
+Configure a `.env` file in the root project folder and define the variables for connecting:
+```
+RHINO_MSSQL_HOST = localhost
+RHINO_MSSQL_USER = sa
+RHINO_MSSQL_PASSWORD = YourStr0ng_PasswordHERE
+```
+
+### 4. Run tests.
+Now that the test database server is up and running, you can run the Rhino unit-tests:
+
+```
+npm test
+```
+
+#### Troubleshooting
+You can view the container logs to see the output from the server, including any runtime failures.
+
+##### Show the running containers:
+```
+docker container ls
+```
+
+##### Show the output from a container:
+```
+docker container logs {container ID or Name here}
+```
+
+## Updating the API/Readme
+The `README.md` file in this project is generated using the `js-to-markdown` package, essentially merging the JSdoc 
+output into the `README.hbs` handlebars template file.
+
+To rebuild the `README.md` file, simply run:
+```
+npm run doc
+```
+
+## Issues / Requests / Contributing
+Please utilize the [issues](issues/) on the project to report a problem or provide feedback. Additional contributors are welcome.
+
+1. Make sure the issue is with `rhino` and *not* the `tedious` or `generic-pool` packages. 
+   a. Active [tedious issues](https://github.com/tediousjs/tedious/issues).
+   b. Active [generic-pool issues](https://github.com/coopernurse/node-pool/issues).
+2. Gather details, your node and `rhino` version.
+3. Provide as much information as possible, including steps to reporoduce the issue. Or better yet, provide a resolution with a merge request.

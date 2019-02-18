@@ -2,9 +2,19 @@
 
 > !!New project - not ready yet!
 
-Rhino is a Node.js Microsoft SQL Server driver wrapper that incorporates pooling and is powered by the well-tested and supported [tedious](http://tediousjs.github.io/tedious/api-connection.html#function_newConnection) driver. 
+Rhino is a Node.js Microsoft SQL Server driver wrapper that incorporates pooling and is powered by the Microsoft-backed 
+[tedious](http://tediousjs.github.io/tedious/api-connection.html#function_newConnection) driver. 
 
-Rhino purposefully uses very few dependencies and is a solid SQL driver implementation built for production use. It employs a pure promise and async/await enabled API usable in modern Node.JS programs. Additionally, Rhino makes connection pooling management totally transparent - dealing with all the internal connection management for you. This means you can focus on running queries, not managing connections.
+Rhino purposefully uses very few dependencies and is a solid SQL driver implementation built for production use. It 
+employs a pure promise and async/await enabled API usable in modern Node.JS programs. Additionally, Rhino makes 
+connection pooling management totally transparent - dealing with all the internal connection management for you. This 
+means you can focus on running queries, not managing connections.
+
+Rhino has several advantages over existing `tedious` wrappers:
+
+1. Pure async/await design.
+2. Works out-of-the box with vanilla `Promise`s.
+3. Automagic pooling. It's all handled for you.
 
 ## Installation
 
@@ -53,78 +63,109 @@ console.log(results.rows);
         throw;
     }
 ```
+# API 
 
-## API
+## Classes
 
-### [Class] ```Rhino```
+<dl>
+<dt><a href="#Rhino">Rhino</a></dt>
+<dd><p>Rhino is a managed Microsoft SQL Server driver powered by tedious and node-pool. This class defines functionality
+to execute queries and utlize transactions. Under the hood it handles all connection pooling, including opening
+and closing of connections to the database. </p>
+<p>You can use multiple instances of the Rhino class in your application - each one can utilize a different 
+configuration.</p>
+</dd>
+</dl>
 
-#### ```#constructor(@config)```
-Rhino fully implements the [tedious connection configuration](http://tediousjs.github.io/tedious/api-connection.html#function_newConnection) for establishing and executing database operations. All `config` properties are passed directly into the internally created and managed connections. In addition to the tedious configuration object, we utilize a merged `pool` object property which is directly passed to [generic-pool](https://github.com/coopernurse/node-pool) when a new pool instance is created.
+## Typedefs
 
-Here's a configuration object with most of the possible properties and default values:
-```json
-{
-    "server": "localhost",
-    "port": 1433,
-    "instanceName": null,
-    "database": "master",
-    "appName": "Tedious",
-    "connectTimeout": 15000,
-    "requestTimeout": 15000,
-    "cancelTimeout": 5000,
-    "connectionRetryInterval": 500,
-    "encrypt": false,
-    "authentication": {
-        "type": "default",
-        "options": {
-            "userName": "",
-            "password": "",
-            "domain": ""
-        }
-    },
-    "pool": {
-        "max": 1,
-        "min": 0,
-        "maxWaitingClients": null,
-        "acquireTimeoutMillis": null,
-        "fifo": true,
-        "priorityRange": 1,
-        "autostart": true, 
-        "evictionRunIntervalMillis": 3,
-        "softIdleTimeoutMillis": -1,
-        "idleTimeoutMillis": 30000
-    },
-    "tdsVersion": "7_4",
-    "dateFormat": "mdy",
-    "fallbackToDefaultDb": false,
-    "enableAnsiNull": true,
-    "enableAnsiNullDefault": true,
-    "enableAnsiPadding": true,
-    "enableAnsiWarnings": true,
-    "enableConcatNullYieldsNull": true,
-    "enableCursorCloseOnCommit": false,
-    "enableImplicitTransactions": false,
-    "enableNumericRoundabort": false,
-    "enableQuotedIdentifier": true,
-    "rowCollectionOnDone": false,
-    "rowCollectionOnRequestCompletion": false,
-    "packetSize": 4096,
-    "useUTC": true,
-    "abortTransactionOnError": null,
-    "localAddress": null,
-    "useColumnNames": false,
-    "camelCaseColumns": false,
-    "columnNameReplacer": null,
-    "isolationLevel": "READ_COMMITED",
-    "connectionIsolationLevel": "READ_COMMITED",
-    "readOnlyIntent": false,
-    "cryptoCredentialsDetails": {}
-}
-```
+<dl>
+<dt><a href="#TediousConfiguration">TediousConfiguration</a></dt>
+<dd><p>Please refer to: <a href="http://tediousjs.github.io/tedious/api-connection.html#function_newConnection">Tedious on GitHub</a></p>
+</dd>
+<dt><a href="#NodePoolConfiguration">NodePoolConfiguration</a></dt>
+<dd><p>Please refer to:  <a href="https://github.com/coopernurse/node-pool">Generic Pool on GitHub</a></p>
+</dd>
+<dt><a href="#RhinoBaseConfiguration">RhinoBaseConfiguration</a></dt>
+<dd></dd>
+<dt><a href="#RhinoConfiguration">RhinoConfiguration</a> : <code><a href="#TediousConfiguration">TediousConfiguration</a></code> | <code><a href="#RhinoBaseConfiguration">RhinoBaseConfiguration</a></code></dt>
+<dd><p>Rhino&#39;s configuration fully implements all properties from both <code>tedious</code> and <code>generic-pool</code> configurations.
+The <code>generic-pool</code> options are specified under the <code>pool</code> property, while all other configuration properties are
+passed to <code>tedious</code>.</p>
+</dd>
+</dl>
 
-#### ```.create(@config)```
-This function creates a new `Rhino` instance to act as a pool for executing database queries. You can create multiple `Rhino` instances to manage multiple pools of connections or for different databases.
+<a name="Rhino"></a>
 
+## Rhino
+Rhino is a managed Microsoft SQL Server driver powered by tedious and node-pool. This class defines functionality
+to execute queries and utlize transactions. Under the hood it handles all connection pooling, including opening
+and closing of connections to the database. 
+
+You can use multiple instances of the Rhino class in your application - each one can utilize a different 
+configuration.
+
+**Kind**: global class  
+
+* [Rhino](#Rhino)
+    * [new Rhino([config])](#new_Rhino_new)
+    * _instance_
+        * [.config](#Rhino+config) : [<code>RhinoConfiguration</code>](#RhinoConfiguration)
+        * [.ping()](#Rhino+ping) ⇒ <code>Boolean</code>
+    * _static_
+        * [.create([config])](#Rhino.create) ⇒ [<code>Rhino</code>](#Rhino)
+
+
+* * *
+
+<a name="new_Rhino_new"></a>
+
+### new Rhino([config])
+Constructs a `Rhino` instance using the specified `config` values.
+
+
+| Param | Type | Description |
+| --- | --- | --- |
+| [config] | [<code>RhinoConfiguration</code>](#RhinoConfiguration) | Configuration values to use in this `Rhino` instance. Any properties not explicitly specified will use the default values. |
+
+
+* * *
+
+<a name="Rhino+config"></a>
+
+### rhino.config : [<code>RhinoConfiguration</code>](#RhinoConfiguration)
+**Kind**: instance property of [<code>Rhino</code>](#Rhino)  
+
+* * *
+
+<a name="Rhino+ping"></a>
+
+### rhino.ping() ⇒ <code>Boolean</code>
+Attempts to connect to the database. This method utilizes the internal connection pool, and will return `true`
+if a connection is already opened and active. If the connection cannot be established for any reason, including
+an error, a `false` is returned.
+
+Note that if an error occurs in this function call, it is *not* thrown, but it will be logged normally.
+
+**Kind**: instance method of [<code>Rhino</code>](#Rhino)  
+**Returns**: <code>Boolean</code> - Returns `true` when a connection was successfully aquired. A `false` value is returned if the
+connection cannot be aquired for any reason.  
+
+* * *
+
+<a name="Rhino.create"></a>
+
+### Rhino.create([config]) ⇒ [<code>Rhino</code>](#Rhino)
+This function creates a new `Rhino` instance to act as a pool for executing database queries. You can create
+multiple `Rhino` instances to manage multiple pools of connections or for different databases.
+
+**Kind**: static method of [<code>Rhino</code>](#Rhino)  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| [config] | [<code>RhinoConfiguration</code>](#RhinoConfiguration) | Configuration values to use in this `Rhino` instance. Any properties not explicitly specified will use the default values. |
+
+**Example**  
 ```js
 const rhino = require('rhino');
 
@@ -140,21 +181,182 @@ let pool2 = rhino.create({
     });
 ```
 
-#### ```#transaction```
+* * *
 
-#### ```#query(@sql, ...@parameters)```
+<a name="TediousConfiguration"></a>
+
+## TediousConfiguration
+Please refer to: [Tedious on GitHub](http://tediousjs.github.io/tedious/api-connection.html#function_newConnection)
+
+**Kind**: global typedef  
+**Properties**
+
+| Name | Type | Default |
+| --- | --- | --- |
+| [server] | <code>String</code> | <code>&quot;localhost&quot;</code> | 
+| [port] | <code>Number</code> | <code>1433</code> | 
+| [instanceName] | <code>String</code> | <code></code> | 
+| [database] | <code>String</code> | <code>&quot;master&quot;</code> | 
+| [appName] | <code>String</code> | <code>&quot;Tedious&quot;</code> | 
+| [connectTimeout] | <code>Number</code> | <code>15000</code> | 
+| [requestTimeout] | <code>Number</code> | <code>15000</code> | 
+| [cancelTimeout] | <code>Number</code> | <code>5000</code> | 
+| [connectionRetryInterval] | <code>Number</code> | <code>500</code> | 
+| [encrypt] | <code>Boolean</code> | <code>false</code> | 
+| [authentication] | <code>Object</code> |  | 
+| [authentication.type] | <code>String</code> | <code>&quot;default&quot;</code> | 
+| [authentication.options] | <code>Object</code> |  | 
+| [authentication.options.userName] | <code>String</code> |  | 
+| [authentication.options.password] | <code>String</code> |  | 
+| [authentication.options.domain] | <code>String</code> |  | 
+| [tdsVersion] | <code>String</code> | <code>&quot;7_4&quot;</code> | 
+| [dateFormat] | <code>String</code> | <code>&quot;mdy&quot;</code> | 
+| [fallbackToDefaultDb] | <code>Boolean</code> | <code>false</code> | 
+| [enableAnsiNull] | <code>Boolean</code> | <code>true</code> | 
+| [enableAnsiNullDefault] | <code>Boolean</code> | <code>true</code> | 
+| [enableAnsiPadding] | <code>Boolean</code> | <code>true</code> | 
+| [enableAnsiWarnings] | <code>Boolean</code> | <code>true</code> | 
+| [enableConcatNullYieldsNull] | <code>Boolean</code> | <code>true</code> | 
+| [enableCursorCloseOnCommit] | <code>Boolean</code> | <code>false</code> | 
+| [enableImplicitTransactions] | <code>Boolean</code> | <code>false</code> | 
+| [enableNumericRoundabort] | <code>Boolean</code> | <code>false</code> | 
+| [enableQuotedIdentifier] | <code>Boolean</code> | <code>true</code> | 
+| [rowCollectionOnDone] | <code>Boolean</code> | <code>false</code> | 
+| [rowCollectionOnRequestCompletion] | <code>Boolean</code> | <code>false</code> | 
+| [packetSize] | <code>Number</code> | <code>4096</code> | 
+| [useUTC] | <code>Boolean</code> | <code>true</code> | 
+| [abortTransactionOnError] | <code>Boolean</code> | <code></code> | 
+| [localAddress] | <code>String</code> | <code></code> | 
+| [useColumnNames] | <code>Boolean</code> | <code>false</code> | 
+| [camelCaseColumns] | <code>Boolean</code> | <code>false</code> | 
+| [columnNameReplacer] | <code>Boolean</code> | <code></code> | 
+| [isolationLevel] | <code>String</code> | <code>&quot;READ_COMMITED&quot;</code> | 
+| [connectionIsolationLevel] | <code>String</code> | <code>&quot;READ_COMMITED&quot;</code> | 
+| [readOnlyIntent] | <code>Boolean</code> | <code>false</code> | 
+| [cryptoCredentialsDetails] | <code>Object</code> |  | 
+
+
+* * *
+
+<a name="NodePoolConfiguration"></a>
+
+## NodePoolConfiguration
+Please refer to:  [Generic Pool on GitHub](https://github.com/coopernurse/node-pool)
+
+**Kind**: global typedef  
+**Properties**
+
+| Name | Type | Default |
+| --- | --- | --- |
+| [max] | <code>Number</code> | <code>1</code> | 
+| [min] | <code>Number</code> | <code>0</code> | 
+| [maxWaitingClients] | <code>Number</code> | <code></code> | 
+| [acquireTimeoutMillis] | <code>Number</code> | <code></code> | 
+| [fifo] | <code>Number</code> | <code>true</code> | 
+| [priorityRange] | <code>Number</code> | <code>1</code> | 
+| [autostart] | <code>Number</code> | <code>true</code> | 
+| [evictionRunIntervalMillis] | <code>Number</code> | <code>3</code> | 
+| [softIdleTimeoutMillis] | <code>Number</code> | <code>-1</code> | 
+| [idleTimeoutMillis] | <code>Number</code> | <code>30000</code> | 
+
+
+* * *
+
+<a name="RhinoBaseConfiguration"></a>
+
+## RhinoBaseConfiguration
+**Kind**: global typedef  
+**Properties**
+
+| Name | Type |
+| --- | --- |
+| [pool] | [<code>NodePoolConfiguration</code>](#NodePoolConfiguration) | 
+
+
+* * *
+
+<a name="RhinoConfiguration"></a>
+
+## RhinoConfiguration : [<code>TediousConfiguration</code>](#TediousConfiguration) \| [<code>RhinoBaseConfiguration</code>](#RhinoBaseConfiguration)
+Rhino's configuration fully implements all properties from both `tedious` and `generic-pool` configurations.
+The `generic-pool` options are specified under the `pool` property, while all other configuration properties are
+passed to `tedious`.
+
+**Kind**: global typedef  
+**See**
+
+- [Tedious](http://tediousjs.github.io/tedious/api-connection.html#function_newConnection)
+- [Generic Pool](https://github.com/coopernurse/node-pool)
+
+
+* * *
+
+
+# Project Maintenance
 
 ## Unit Testing
-You will need to configure a Microsoft SQL Server. The user you connect with must be able to create a database, tables, and data, so it is recommended to use docker or a standalone non-production server.
+Unit-testing this driver requires a Microsoft SQL Server instance.
+Due to the fragile nature of the database unit-testing, and to avoid collisions with other users, it's recommended
+to use the process described below ([docker](https://www.docker.com/products/docker-engine) is required).
 
-You can utilize the freely available docker Express version.
+### 1. Build the image.
+To get started, build our testing docker image:
 ```
-docker run -e 'ACCEPT_EULA=Y' -e 'SA_PASSWORD=YourStr0ng_PasswordHERE' -e 'MSSQL_PID=Express' -p 1433:1433 -d microsoft/mssql-server-linux:latest
+docker build ./test --build-arg SA_PASSWORD="YourStr0ng_PasswordHERE" -t rhino:test
 ```
 
+### 2. Run the container.
+You need to run the `rhino:test` container from the built image. This will spin up the server and run the install 
+script. It is usually ideal to run the container in daemon mode (`-d`), as the container will stay alive until stopped.
+
+```
+docker run -d -p 1433:1433 rhino:test
+```
+
+When run using the command above, the docker server will be accessible on localhost port 1433.
+
+### 3. Setup testing environment.
 Configure a `.env` file in the root project folder and define the variables for connecting:
 ```
 RHINO_MSSQL_HOST = localhost
 RHINO_MSSQL_USER = sa
 RHINO_MSSQL_PASSWORD = YourStr0ng_PasswordHERE
 ```
+
+### 4. Run tests.
+Now that the test database server is up and running, you can run the Rhino unit-tests:
+
+```
+npm test
+```
+
+#### Troubleshooting
+You can view the container logs to see the output from the server, including any runtime failures.
+
+##### Show the running containers:
+```
+docker container ls
+```
+
+##### Show the output from a container:
+```
+docker container logs {container ID or Name here}
+```
+
+## Updating the API/Readme
+The `README.md` file in this project is generated using the `js-to-markdown` package, essentially merging the JSdoc 
+output into the `README.hbs` handlebars template file.
+
+To rebuild the `README.md` file, simply run:
+```
+npm run doc
+```
+
+## Issues / Requests / Contributing
+Please utilize the [issues](issues/) on the project to report a problem or provide feedback. Additional contributors are welcome.
+
+1. Make sure the issue is with `rhino` and *not* the `tedious` or `generic-pool` packages. 
+   a. Active [tedious issues](https://github.com/tediousjs/tedious/issues).
+   b. Active [generic-pool issues](https://github.com/coopernurse/node-pool/issues).
+2. Gather details, your node and `rhino` version.
+3. Provide as much information as possible, including steps to reporoduce the issue. Or better yet, provide a resolution with a merge request.
