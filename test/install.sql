@@ -1,12 +1,20 @@
 /**
-* Database script used for setup of Rhino unit testing. 
+* Database installation script used for Rhino unit testing. 
 * This script uses data from the open-source "sample-database" project,
 * which is available here: https://github.com/chriseaton/sample-database
+*
+* Note that the unit testing user must be able to revert this database to
+* a snapshot. This typically requires the user be in the db_owner 
+* (database) and dbcreator (server) roles.
 **/
-
-CREATE DATABASE rhino_test;
 GO
-USE rhino_test;
+SET QUOTED_IDENTIFIER ON
+GO
+SET ANSI_NULLS ON
+GO
+CREATE DATABASE Rhino_Test;
+GO
+USE Rhino_Test;
 
 --Create table "Product".
 CREATE TABLE [Product] ([ID] INT IDENTITY(1,1) PRIMARY KEY, [Name] VARCHAR(512) NOT NULL, [ScanCode] VARCHAR(512), [Cost] FLOAT NOT NULL, [Price] FLOAT NOT NULL, [ImageURL] VARCHAR(512), [DateCreated] DATETIME NOT NULL, [DateUpdated] DATETIME, [DateDeleted] DATETIME)
@@ -11371,3 +11379,18 @@ INSERT INTO [Theme] ([ID], [Name], [HexCode]) VALUES (98, 'Burnt Orange Super (5
 INSERT INTO [Theme] ([ID], [Name], [HexCode]) VALUES (99, 'Vivid Tangerine Amazing', '#FFA089');
 INSERT INTO [Theme] ([ID], [Name], [HexCode]) VALUES (100, 'Red (896702)', '#EE204D');
 SET IDENTITY_INSERT [Theme] OFF;
+
+--Create snapshot for unit-testing restore
+PRINT 'Creating snapshot.';
+DECLARE @snapshotFileName VARCHAR(1024);
+SELECT @snapshotFileName = physical_name FROM sys.database_files WHERE type_desc = 'ROWS';
+SET @snapshotFileName = SUBSTRING(@snapshotFileName, 0, LEN(@snapshotFileName) - CHARINDEX('/', REVERSE(@snapshotFileName)) + 1);
+SET @snapshotFileName = @snapshotFileName + '/Rhino_Test_Snapshot.ss';
+PRINT @snapshotFileName;
+DECLARE @snapshotSql NVARCHAR(2048) = '
+CREATE DATABASE Rhino_Test_Snapshot ON (
+    NAME = Rhino_Test,
+    FILENAME = ''' + @snapshotFileName + '''
+)  
+AS SNAPSHOT OF Rhino_Test;';
+EXEC sp_executesql @snapshotSql;
