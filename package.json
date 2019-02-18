@@ -1,7 +1,7 @@
 {
     "name": "rhino",
     "version": "0.0.1",
-    "description": "Rhino is a production-focused Microsoft SQL Server driver for Node.JS based on tedious and generic-pool.",
+    "description": "Rhino is a production-focused Microsoft SQL Server driver for Node.JS.",
     "main": "rhino.js",
     "engines": {
         "node": ">= 4"
@@ -33,7 +33,7 @@
     },
     "homepage": "https://github.com/chriseaton/rhino#readme",
     "dependencies": {
-        "generic-pool": "^3.6.1",
+        "tarn": "^1.1.4",
         "tedious": "^5.0.3"
     },
     "devDependencies": {
