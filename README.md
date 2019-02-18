@@ -85,22 +85,20 @@ configuration.</p>
 ## Typedefs
 
 <dl>
-<dt><a href="#LogConfiguration">LogConfiguration</a></dt>
-<dd></dd>
 <dt><a href="#TediousConfiguration">TediousConfiguration</a></dt>
 <dd><p>The tedious configuration options are all fully supported. Some options support default values from environmental
 variables, all of which use the <code>RHINO_MSSQL_</code> prefix.
 For more details, please refer to: <a href="http://tediousjs.github.io/tedious/api-connection.html#function_newConnection">Tedious on GitHub</a></p>
 </dd>
-<dt><a href="#NodePoolConfiguration">NodePoolConfiguration</a></dt>
-<dd><p>Please refer to:  <a href="https://github.com/coopernurse/node-pool">Generic Pool on GitHub</a></p>
+<dt><a href="#PoolConfiguration">PoolConfiguration</a></dt>
+<dd><p>Please refer to:  <a href="https://github.com/Vincit/tarn.js">Tarn on GitHub</a></p>
 </dd>
+<dt><a href="#LogConfiguration">LogConfiguration</a></dt>
+<dd></dd>
 <dt><a href="#RhinoBaseConfiguration">RhinoBaseConfiguration</a></dt>
 <dd></dd>
 <dt><a href="#RhinoConfiguration">RhinoConfiguration</a> : <code><a href="#TediousConfiguration">TediousConfiguration</a></code> | <code><a href="#RhinoBaseConfiguration">RhinoBaseConfiguration</a></code></dt>
-<dd><p>Rhino&#39;s configuration fully implements all properties from both <code>tedious</code> and <code>generic-pool</code> configurations.
-The <code>generic-pool</code> options are specified under the <code>pool</code> property, while all other configuration properties are
-passed to <code>tedious</code>.</p>
+<dd><p>Rhino&#39;s configuration fully implements all configuration properties from <code>tedious</code>.</p>
 </dd>
 </dl>
 
@@ -211,9 +209,9 @@ Constructs a `Rhino` instance using the specified `config` values.
 <a name="Rhino+destroy"></a>
 
 ### rhino.destroy([done])
+Destroys internal pooled resources in this instance. This is called automatically when the process exits.
+
 **Kind**: instance method of [<code>Rhino</code>](#Rhino)  
-**See**: [#destroy](#destroy)
-Destroys internal pooled resources in this instance. This is called automatically when the process exits.  
 
 | Param | Type | Description |
 | --- | --- | --- |
@@ -264,19 +262,6 @@ let pool2 = rhino.create({
         ... 
     });
 ```
-
-* * *
-
-<a name="LogConfiguration"></a>
-
-## LogConfiguration
-**Kind**: global typedef  
-**Properties**
-
-| Name | Type | Description |
-| --- | --- | --- |
-| mode | <code>Boolean</code> \| <code>String</code> | Can be 'error', 'warn', or 'debug for enabled logging levels. A falsey value will disable logging. A truthy value that is not a string will assume 'warn' mode. |
-
 
 * * *
 
@@ -337,26 +322,36 @@ For more details, please refer to: [Tedious on GitHub](http://tediousjs.github.i
 
 * * *
 
-<a name="NodePoolConfiguration"></a>
+<a name="PoolConfiguration"></a>
 
-## NodePoolConfiguration
-Please refer to:  [Generic Pool on GitHub](https://github.com/coopernurse/node-pool)
+## PoolConfiguration
+Please refer to:  [Tarn on GitHub](https://github.com/Vincit/tarn.js)
 
 **Kind**: global typedef  
 **Properties**
 
-| Name | Type | Default | Description |
-| --- | --- | --- | --- |
-| [max] | <code>Number</code> | <code>1</code> |  |
-| [min] | <code>Number</code> | <code>0</code> |  |
-| [maxWaitingClients] | <code>Number</code> | <code></code> |  |
-| [acquireTimeoutMillis] | <code>Number</code> | <code></code> |  |
-| [fifo] | <code>Number</code> | <code>true</code> |  |
-| [priorityRange] | <code>Number</code> | <code>1</code> |  |
-| [autostart] | <code>Number</code> | <code>true</code> | This setting is always true in Rhino. |
-| [evictionRunIntervalMillis] | <code>Number</code> | <code>3</code> |  |
-| [softIdleTimeoutMillis] | <code>Number</code> | <code>-1</code> |  |
-| [idleTimeoutMillis] | <code>Number</code> | <code>30000</code> |  |
+| Name | Type | Default |
+| --- | --- | --- |
+| [max] | <code>Number</code> | <code>1</code> | 
+| [min] | <code>Number</code> | <code>0</code> | 
+| [acquireTimeoutMillis] | <code>Number</code> | <code>30000</code> | 
+| [createTimeoutMillis] | <code>Number</code> | <code>30000</code> | 
+| [idleTimeoutMillis] | <code>Number</code> | <code>30000</code> | 
+| [reapIntervalMillis] | <code>Number</code> | <code>1000</code> | 
+| [createRetryIntervalMillis] | <code>Number</code> | <code>200</code> | 
+
+
+* * *
+
+<a name="LogConfiguration"></a>
+
+## LogConfiguration
+**Kind**: global typedef  
+**Properties**
+
+| Name | Type | Description |
+| --- | --- | --- |
+| mode | <code>Boolean</code> \| <code>String</code> | Can be 'error', 'warn', or 'debug for enabled logging levels. A falsey value will disable logging. A truthy value that is not a string will assume 'warn' mode. |
 
 
 * * *
@@ -369,7 +364,8 @@ Please refer to:  [Generic Pool on GitHub](https://github.com/coopernurse/node-p
 
 | Name | Type |
 | --- | --- |
-| [pool] | [<code>NodePoolConfiguration</code>](#NodePoolConfiguration) | 
+| [pool] | [<code>PoolConfiguration</code>](#PoolConfiguration) | 
+| [logging] | [<code>LogConfiguration</code>](#LogConfiguration) | 
 
 
 * * *
@@ -377,15 +373,13 @@ Please refer to:  [Generic Pool on GitHub](https://github.com/coopernurse/node-p
 <a name="RhinoConfiguration"></a>
 
 ## RhinoConfiguration : [<code>TediousConfiguration</code>](#TediousConfiguration) \| [<code>RhinoBaseConfiguration</code>](#RhinoBaseConfiguration)
-Rhino's configuration fully implements all properties from both `tedious` and `generic-pool` configurations.
-The `generic-pool` options are specified under the `pool` property, while all other configuration properties are
-passed to `tedious`.
+Rhino's configuration fully implements all configuration properties from `tedious`.
 
 **Kind**: global typedef  
 **See**
 
 - [Tedious](http://tediousjs.github.io/tedious/api-connection.html#function_newConnection)
-- [Generic Pool](https://github.com/coopernurse/node-pool)
+- [Tarn](https://github.com/Vincit/tarn.js)
 
 
 * * *
@@ -454,8 +448,6 @@ npm run doc
 ## Issues / Requests / Contributing
 Please utilize the [issues](issues/) on the project to report a problem or provide feedback. Additional contributors are welcome.
 
-1. Make sure the issue is with `rhino` and *not* the `tedious` or `generic-pool` packages. 
-   a. Active [tedious issues](https://github.com/tediousjs/tedious/issues).
-   b. Active [generic-pool issues](https://github.com/coopernurse/node-pool/issues).
+1. Make sure the issue is with `rhino` and *not* the `[tedious](https://github.com/tediousjs/tedious/issues)` package. 
 2. Gather details, your node and `rhino` version.
 3. Provide as much information as possible, including steps to reporoduce the issue. Or better yet, provide a resolution with a merge request.
