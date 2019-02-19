@@ -104,22 +104,7 @@ class Rhino {
         /**
          * @type {RhinoConfiguration}
          */
-        this.config = Object.assign({
-            server: process.env.RHINO_MSSQL_HOST || process.env.RHINO_MSSQL_SERVER || 'localhost',
-            port: process.env.RHINO_MSSQL_PORT || 1433,
-            instanceName: process.env.RHINO_MSSQL_INSTANCE || process.env.RHINO_MSSQL_INSTANCE_NAME || null,
-            database: process.env.RHINO_MSSQL_DATABASE || null,
-            appName: process.env.RHINO_MSSQL_APP_NAME || null,
-            encrypt: process.env.RHINO_MSSQL_ENCRYPT || false,
-            authentication: {
-                type: process.env.RHINO_MSSQL_AUTH_TYPE || 'default',
-                options: {
-                    userName: process.env.RHINO_MSSQL_USER || process.env.RHINO_MSSQL_AUTH_USER || null,
-                    password: process.env.RHINO_MSSQL_PASSWORD || process.env.RHINO_MSSQL_AUTH_PASSWORD || null,
-                    domain: process.env.RHINO_MSSQL_DOMAIN || process.env.RHINO_MSSQL_AUTH_DOMAIN || null
-                }
-            }
-        }, config);
+        this.config = Object.assign(Rhino.defaultConfig(), config);
 
         /**
          * @type {Log}
@@ -275,6 +260,30 @@ class Rhino {
      */
     static create(config) {
         return new Rhino(config);
+    }
+ 
+    /**
+     * Returns a default `RhinoConfiguration` object. Default values are first searched for in environmental variables
+     * then, if not found, with hard-coded default values.
+     * @returns {RhinoConfiguration}
+     */
+    static defaultConfig() {
+        return {
+            server: process.env.RHINO_MSSQL_HOST || process.env.RHINO_MSSQL_SERVER || 'localhost',
+            port: process.env.RHINO_MSSQL_PORT || 1433,
+            instanceName: process.env.RHINO_MSSQL_INSTANCE || process.env.RHINO_MSSQL_INSTANCE_NAME || null,
+            database: process.env.RHINO_MSSQL_DATABASE || null,
+            appName: process.env.RHINO_MSSQL_APP_NAME || null,
+            encrypt: process.env.RHINO_MSSQL_ENCRYPT || false,
+            authentication: {
+                type: process.env.RHINO_MSSQL_AUTH_TYPE || 'default',
+                options: {
+                    userName: process.env.RHINO_MSSQL_USER || process.env.RHINO_MSSQL_AUTH_USER || null,
+                    password: process.env.RHINO_MSSQL_PASSWORD || process.env.RHINO_MSSQL_AUTH_PASSWORD || null,
+                    domain: process.env.RHINO_MSSQL_DOMAIN || process.env.RHINO_MSSQL_AUTH_DOMAIN || null
+                }
+            }
+        };
     }
 
 }
