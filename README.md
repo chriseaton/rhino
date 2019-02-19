@@ -1,3 +1,5 @@
+![Rhino](./rhino.png)
+
 # Rhino
 
 > !!New project - not ready yet!
