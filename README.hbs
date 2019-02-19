@@ -4,19 +4,21 @@
 
 > !!New project - not ready yet!
 
-Rhino is a production-focused Node.js Microsoft SQL Server driver wrapper that incorporates pooling and is powered by the Microsoft-backed 
+Rhino is a production-focused Node.js Microsoft SQL Server driver that incorporates pooling and is powered by the Microsoft-backed 
 [tedious](http://tediousjs.github.io/tedious/api-connection.html#function_newConnection) driver. 
 
 Rhino purposefully uses very few dependencies and is a solid SQL driver implementation built for production use. It 
-employs a pure promise and async/await enabled API usable in modern Node.JS programs. Additionally, Rhino makes 
-connection pooling management totally transparent - dealing with all the internal connection management for you. This 
-means you can focus on running queries, not managing connections.
+employs a strongly implemented promise and async/await API. 
+
+Rhino makes connection pooling management totally transparent - dealing with all the internal connection management for
+you. This means you can focus on running queries, not managing connections.
 
 Rhino has several advantages over existing `tedious` wrappers:
 
-1. Pure async/await design.
-2. Works out-of-the box with vanilla `Promise`s.
-3. Automagic pooling. It's all handled for you.
+1. Works out-of-the box with vanilla Promise's and async/await.
+3. Behind-the-scenes pooling. It's all handled for you.
+3. Production ready - built with strong unit-testing coverage.
+4. Open-source, and accepting positive contributions.
 
 ## Installation
 
@@ -30,7 +32,7 @@ npm i rhino --save
 const rhino = require('rhino');
 
 ...
-let pool = await rhino.create({
+let dbc = await rhino.create({
     server: 'localhost',
     authentication: {
         options: {  
@@ -43,9 +45,10 @@ let pool = await rhino.create({
         max: 10
     }
 });
-let results = await pool.query('SELECT * FROM dbo.People');
+let results = await dbc.query('SELECT * FROM dbo.People');
 console.log(`Count: ${results.count}`);
 console.log(results.rows);
+dbc.destroy(); 
 ```
 
 ### Transactions
@@ -53,7 +56,7 @@ console.log(results.rows);
 ```js
     let tx = null;
     try {
-        tx = await pool.transaction();
+        tx = await dbc.transaction();
         let results = await tx
             .query('INSERT INTO dbo.People (Code, FullName) VALUES (434,\'John Bircham\')')
             .query('INSERT INTO dbo.People (Code, FullName) VALUES (@code, @name)', { code: 322, name: 'Amy Smith' })
@@ -132,6 +135,6 @@ npm run doc
 ## Issues / Requests / Contributing
 Please utilize the [issues](issues/) on the project to report a problem or provide feedback. Additional contributors are welcome.
 
-1. Make sure the issue is with `rhino` and *not* the `[tedious](https://github.com/tediousjs/tedious/issues)` package. 
+1. Make sure the issue is with `rhino` and *not* the [tedious](https://github.com/tediousjs/tedious/issues) package. 
 2. Gather details, your node and `rhino` version.
 3. Provide as much information as possible, including steps to reporoduce the issue. Or better yet, provide a resolution with a merge request.
