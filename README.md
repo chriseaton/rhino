@@ -175,6 +175,7 @@ configuration.
         * [.ping()](#Rhino+ping) ⇒ <code>Boolean</code>
     * _static_
         * [.create([config])](#Rhino.create) ⇒ [<code>Rhino</code>](#Rhino)
+        * [.defaultConfig()](#Rhino.defaultConfig) ⇒ [<code>RhinoConfiguration</code>](#RhinoConfiguration)
 
 
 * * *
@@ -262,6 +263,16 @@ let pool2 = rhino.create({
         ... 
     });
 ```
+
+* * *
+
+<a name="Rhino.defaultConfig"></a>
+
+### Rhino.defaultConfig() ⇒ [<code>RhinoConfiguration</code>](#RhinoConfiguration)
+Returns a default `RhinoConfiguration` object. Default values are first searched for in environmental variables
+then, if not found, with hard-coded default values.
+
+**Kind**: static method of [<code>Rhino</code>](#Rhino)  
 
 * * *
 
