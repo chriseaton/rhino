@@ -4,21 +4,16 @@
 
 > !!New project - not ready yet!
 
-Rhino is a production-focused Node.js Microsoft SQL Server driver that incorporates pooling and is powered by the Microsoft-backed 
-[tedious](http://tediousjs.github.io/tedious/api-connection.html#function_newConnection) driver. 
+Rhino is a tough, production-focused Node.js Microsoft SQL Server driver that incorporates pooling and is powered by
+the [tedious](http://tediousjs.github.io/tedious/api-connection.html#function_newConnection) driver. 
 
-Rhino purposefully uses very few dependencies and is a solid SQL driver implementation built for production use. It 
-employs a strongly implemented promise and async/await API. 
-
-Rhino makes connection pooling management totally transparent - dealing with all the internal connection management for
-you. This means you can focus on running queries, not managing connections.
-
-Rhino has several advantages over existing `tedious` wrappers:
-
-1. Works out-of-the box with vanilla Promise's and async/await.
-3. Behind-the-scenes pooling. It's all handled for you.
-3. Production ready - built with strong unit-testing coverage.
-4. Open-source, and accepting positive contributions.
+Here's why Rhino is a solid choice:
+- Purposefully uses very few dependencies.
+- Solid, modern, unit-tested implementation built for heavy production use. 
+- Employs async/await/Promise operations to keep your queries running quickly.
+- Manages connections for you using an internal pool, tested with up to 10,000 simultaneous connections. 
+  Stop worrying about connections and just build queries.
+- Open-source and accepting positive contributions.
 
 ## Installation
 
@@ -102,7 +97,7 @@ For more details, please refer to: <a href="http://tediousjs.github.io/tedious/a
 <dd></dd>
 <dt><a href="#RhinoBaseConfiguration">RhinoBaseConfiguration</a></dt>
 <dd></dd>
-<dt><a href="#RhinoConfiguration">RhinoConfiguration</a> : <code><a href="#TediousConfiguration">TediousConfiguration</a></code> | <code><a href="#RhinoBaseConfiguration">RhinoBaseConfiguration</a></code></dt>
+<dt><a href="#RhinoConfiguration">RhinoConfiguration</a> : <code><a href="#TediousConfiguration">TediousConfiguration</a></code></dt>
 <dd><p>Rhino&#39;s configuration fully implements all configuration properties from <code>tedious</code>.</p>
 </dd>
 </dl>
@@ -281,6 +276,24 @@ then, if not found, with hard-coded default values.
 
 * * *
 
+<a name="CONNECTION_STATE"></a>
+
+## CONNECTION\_STATE : <code>enum</code>
+**Kind**: global enum  
+**Read only**: true  
+**Properties**
+
+| Name | Type | Default |
+| --- | --- | --- |
+| IDLE | <code>Number</code> | <code>1</code> | 
+| CONNECTING | <code>Number</code> | <code>2</code> | 
+| DISCONNECTING | <code>Number</code> | <code>4</code> | 
+| TRANSACTING | <code>Number</code> | <code>8</code> | 
+| EXECUTING | <code>Number</code> | <code>16</code> | 
+
+
+* * *
+
 <a name="TediousConfiguration"></a>
 
 ## TediousConfiguration
@@ -294,46 +307,47 @@ For more details, please refer to: [Tedious on GitHub](http://tediousjs.github.i
 | Name | Type | Default | Description |
 | --- | --- | --- | --- |
 | [server] | <code>String</code> | <code>&quot;localhost&quot;</code> | A default value is checked for under the `RHINO_MSSQL_HOST` then `RHINO_MSSQL_SERVER` environmental variables. |
-| [port] | <code>Number</code> | <code>1433</code> | A default value is checked for under the `RHINO_MSSQL_PORT` environmental variable. |
-| [instanceName] | <code>String</code> | <code></code> | A default value is checked for under the `RHINO_MSSQL_INSTANCE` then `RHINO_MSSQL_INSTANCE_NAME` environmental variables. |
-| [database] | <code>String</code> | <code>&quot;master&quot;</code> | A default value is checked for under the `RHINO_MSSQL_DATABASE` environmental variable. |
-| [appName] | <code>String</code> | <code>&quot;Tedious&quot;</code> | A default value is checked for under the `RHINO_MSSQL_APP_NAME` environmental variable. |
-| [connectTimeout] | <code>Number</code> | <code>15000</code> |  |
-| [requestTimeout] | <code>Number</code> | <code>15000</code> |  |
-| [cancelTimeout] | <code>Number</code> | <code>5000</code> |  |
-| [connectionRetryInterval] | <code>Number</code> | <code>500</code> |  |
-| [encrypt] | <code>Boolean</code> | <code>false</code> | A default value is checked for under the `RHINO_MSSQL_ENCRYPT` environmental variable. |
+| [options] | <code>Object</code> |  |  |
+| [options.port] | <code>Number</code> | <code>1433</code> | A default value is checked for under the `RHINO_MSSQL_PORT` environmental variable. |
+| [options.instanceName] | <code>String</code> | <code></code> | A default value is checked for under the `RHINO_MSSQL_INSTANCE` then `RHINO_MSSQL_INSTANCE_NAME` environmental variables. |
+| [options.database] | <code>String</code> | <code>&quot;master&quot;</code> | A default value is checked for under the `RHINO_MSSQL_DATABASE` environmental variable. |
+| [options.appName] | <code>String</code> | <code>&quot;Tedious&quot;</code> | A default value is checked for under the `RHINO_MSSQL_APP_NAME` environmental variable. |
+| [options.connectTimeout] | <code>Number</code> | <code>15000</code> |  |
+| [options.requestTimeout] | <code>Number</code> | <code>15000</code> |  |
+| [options.cancelTimeout] | <code>Number</code> | <code>5000</code> |  |
+| [options.connectionRetryInterval] | <code>Number</code> | <code>500</code> |  |
+| [options.encrypt] | <code>Boolean</code> | <code>false</code> | A default value is checked for under the `RHINO_MSSQL_ENCRYPT` environmental variable. |
 | [authentication] | <code>Object</code> |  |  |
 | [authentication.type] | <code>String</code> | <code>&quot;default&quot;</code> | A default value is checked for under the `RHINO_MSSQL_AUTH_TYPE` environmental variable. |
 | [authentication.options] | <code>Object</code> |  |  |
 | [authentication.options.userName] | <code>String</code> |  | A default value is checked for under the `RHINO_MSSQL_USER` then `RHINO_MSSQL_AUTH_USER` environmental variables. |
 | [authentication.options.password] | <code>String</code> |  | A default value is checked for under the `RHINO_MSSQL_PASSWORD` then `RHINO_MSSQL_AUTH_PASSWORD` environmental variables. |
 | [authentication.options.domain] | <code>String</code> |  | A default value is checked for under the `RHINO_MSSQL_DOMAIN` then `RHINO_MSSQL_AUTH_DOMAIN` environmental variables. |
-| [tdsVersion] | <code>String</code> | <code>&quot;7_4&quot;</code> |  |
-| [dateFormat] | <code>String</code> | <code>&quot;mdy&quot;</code> |  |
-| [fallbackToDefaultDb] | <code>Boolean</code> | <code>false</code> |  |
-| [enableAnsiNull] | <code>Boolean</code> | <code>true</code> |  |
-| [enableAnsiNullDefault] | <code>Boolean</code> | <code>true</code> |  |
-| [enableAnsiPadding] | <code>Boolean</code> | <code>true</code> |  |
-| [enableAnsiWarnings] | <code>Boolean</code> | <code>true</code> |  |
-| [enableConcatNullYieldsNull] | <code>Boolean</code> | <code>true</code> |  |
-| [enableCursorCloseOnCommit] | <code>Boolean</code> | <code>false</code> |  |
-| [enableImplicitTransactions] | <code>Boolean</code> | <code>false</code> |  |
-| [enableNumericRoundabort] | <code>Boolean</code> | <code>false</code> |  |
-| [enableQuotedIdentifier] | <code>Boolean</code> | <code>true</code> |  |
-| [rowCollectionOnDone] | <code>Boolean</code> | <code>false</code> |  |
-| [rowCollectionOnRequestCompletion] | <code>Boolean</code> | <code>false</code> |  |
-| [packetSize] | <code>Number</code> | <code>4096</code> |  |
-| [useUTC] | <code>Boolean</code> | <code>true</code> |  |
-| [abortTransactionOnError] | <code>Boolean</code> | <code></code> |  |
-| [localAddress] | <code>String</code> | <code></code> |  |
-| [useColumnNames] | <code>Boolean</code> | <code>false</code> |  |
-| [camelCaseColumns] | <code>Boolean</code> | <code>false</code> |  |
-| [columnNameReplacer] | <code>Boolean</code> | <code></code> |  |
-| [isolationLevel] | <code>String</code> | <code>&quot;READ_COMMITED&quot;</code> |  |
-| [connectionIsolationLevel] | <code>String</code> | <code>&quot;READ_COMMITED&quot;</code> |  |
-| [readOnlyIntent] | <code>Boolean</code> | <code>false</code> |  |
-| [cryptoCredentialsDetails] | <code>Object</code> |  |  |
+| [options.tdsVersion] | <code>String</code> | <code>&quot;7_4&quot;</code> |  |
+| [options.dateFormat] | <code>String</code> | <code>&quot;mdy&quot;</code> |  |
+| [options.fallbackToDefaultDb] | <code>Boolean</code> | <code>false</code> |  |
+| [options.enableAnsiNull] | <code>Boolean</code> | <code>true</code> |  |
+| [options.enableAnsiNullDefault] | <code>Boolean</code> | <code>true</code> |  |
+| [options.enableAnsiPadding] | <code>Boolean</code> | <code>true</code> |  |
+| [options.enableAnsiWarnings] | <code>Boolean</code> | <code>true</code> |  |
+| [options.enableConcatNullYieldsNull] | <code>Boolean</code> | <code>true</code> |  |
+| [options.enableCursorCloseOnCommit] | <code>Boolean</code> | <code>false</code> |  |
+| [options.enableImplicitTransactions] | <code>Boolean</code> | <code>false</code> |  |
+| [options.enableNumericRoundabort] | <code>Boolean</code> | <code>false</code> |  |
+| [options.enableQuotedIdentifier] | <code>Boolean</code> | <code>true</code> |  |
+| [options.rowCollectionOnDone] | <code>Boolean</code> | <code>false</code> |  |
+| [options.rowCollectionOnRequestCompletion] | <code>Boolean</code> | <code>false</code> |  |
+| [options.packetSize] | <code>Number</code> | <code>4096</code> |  |
+| [options.useUTC] | <code>Boolean</code> | <code>true</code> |  |
+| [options.abortTransactionOnError] | <code>Boolean</code> | <code></code> |  |
+| [options.localAddress] | <code>String</code> | <code></code> |  |
+| [options.useColumnNames] | <code>Boolean</code> | <code>false</code> |  |
+| [options.camelCaseColumns] | <code>Boolean</code> | <code>false</code> |  |
+| [options.columnNameReplacer] | <code>Boolean</code> | <code></code> |  |
+| [options.isolationLevel] | <code>String</code> | <code>&quot;READ_COMMITED&quot;</code> |  |
+| [options.connectionIsolationLevel] | <code>String</code> | <code>&quot;READ_COMMITED&quot;</code> |  |
+| [options.readOnlyIntent] | <code>Boolean</code> | <code>false</code> |  |
+| [options.cryptoCredentialsDetails] | <code>Object</code> |  |  |
 
 
 * * *
@@ -367,7 +381,7 @@ Please refer to:  [Tarn on GitHub](https://github.com/Vincit/tarn.js)
 
 | Name | Type | Description |
 | --- | --- | --- |
-| mode | <code>Boolean</code> \| <code>String</code> | Can be 'error', 'warn', or 'debug for enabled logging levels. A falsey value will disable logging. A truthy value that is not a string will assume 'warn' mode. |
+| mode | <code>Boolean</code> \| <code>String</code> | Can be 'none', 'error', 'warn', or 'debug for enabled logging levels. A falsey value will disable logging. A truthy value that is not a string will assume 'warn' mode. |
 
 
 * * *
@@ -378,17 +392,18 @@ Please refer to:  [Tarn on GitHub](https://github.com/Vincit/tarn.js)
 **Kind**: global typedef  
 **Properties**
 
-| Name | Type |
-| --- | --- |
-| [pool] | [<code>PoolConfiguration</code>](#PoolConfiguration) | 
-| [logging] | [<code>LogConfiguration</code>](#LogConfiguration) | 
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| [pool] | [<code>PoolConfiguration</code>](#PoolConfiguration) |  |  |
+| [logging] | [<code>LogConfiguration</code>](#LogConfiguration) |  |  |
+| [connectionRetries] | <code>Number</code> | <code>3</code> | The number of attempts to connect should the first connection attempt  fail due to socket/network errors (ESOCKET). Other errors, such as those related to authentication are *not* retried. |
 
 
 * * *
 
 <a name="RhinoConfiguration"></a>
 
-## RhinoConfiguration : [<code>TediousConfiguration</code>](#TediousConfiguration) \| [<code>RhinoBaseConfiguration</code>](#RhinoBaseConfiguration)
+## RhinoConfiguration : [<code>TediousConfiguration</code>](#TediousConfiguration)
 Rhino's configuration fully implements all configuration properties from `tedious`.
 
 **Kind**: global typedef  

@@ -4,21 +4,16 @@
 
 > !!New project - not ready yet!
 
-Rhino is a production-focused Node.js Microsoft SQL Server driver that incorporates pooling and is powered by the Microsoft-backed 
-[tedious](http://tediousjs.github.io/tedious/api-connection.html#function_newConnection) driver. 
+Rhino is a tough, production-focused Node.js Microsoft SQL Server driver that incorporates pooling and is powered by
+the [tedious](http://tediousjs.github.io/tedious/api-connection.html#function_newConnection) driver. 
 
-Rhino purposefully uses very few dependencies and is a solid SQL driver implementation built for production use. It 
-employs a strongly implemented promise and async/await API. 
-
-Rhino makes connection pooling management totally transparent - dealing with all the internal connection management for
-you. This means you can focus on running queries, not managing connections.
-
-Rhino has several advantages over existing `tedious` wrappers:
-
-1. Works out-of-the box with vanilla Promise's and async/await.
-3. Behind-the-scenes pooling. It's all handled for you.
-3. Production ready - built with strong unit-testing coverage.
-4. Open-source, and accepting positive contributions.
+Here's why Rhino is a solid choice:
+- Purposefully uses very few dependencies.
+- Solid, modern, unit-tested implementation built for heavy production use. 
+- Employs async/await/Promise operations to keep your queries running quickly.
+- Manages connections for you using an internal pool, tested with up to 10,000 simultaneous connections. 
+  Stop worrying about connections and just build queries.
+- Open-source and accepting positive contributions.
 
 ## Installation
 
