@@ -11,46 +11,47 @@ require('dotenv').load();
  * For more details, please refer to: {@link http://tediousjs.github.io/tedious/api-connection.html#function_newConnection|Tedious on GitHub}
  * @typedef TediousConfiguration
  * @property {String} [server="localhost"] - A default value is checked for under the `RHINO_MSSQL_HOST` then `RHINO_MSSQL_SERVER` environmental variables.
- * @property {Number} [port=1433] - A default value is checked for under the `RHINO_MSSQL_PORT` environmental variable.
- * @property {String} [instanceName=null] - A default value is checked for under the `RHINO_MSSQL_INSTANCE` then `RHINO_MSSQL_INSTANCE_NAME` environmental variables.
- * @property {String} [database="master"] - A default value is checked for under the `RHINO_MSSQL_DATABASE` environmental variable.
- * @property {String} [appName="Tedious"] - A default value is checked for under the `RHINO_MSSQL_APP_NAME` environmental variable.
- * @property {Number} [connectTimeout=15000]
- * @property {Number} [requestTimeout=15000]
- * @property {Number} [cancelTimeout=5000]
- * @property {Number} [connectionRetryInterval=500]
- * @property {Boolean} [encrypt=false] - A default value is checked for under the `RHINO_MSSQL_ENCRYPT` environmental variable.
+ * @property {Object} [options]
+ * @property {Number} [options.port=1433] - A default value is checked for under the `RHINO_MSSQL_PORT` environmental variable.
+ * @property {String} [options.instanceName=null] - A default value is checked for under the `RHINO_MSSQL_INSTANCE` then `RHINO_MSSQL_INSTANCE_NAME` environmental variables.
+ * @property {String} [options.database="master"] - A default value is checked for under the `RHINO_MSSQL_DATABASE` environmental variable.
+ * @property {String} [options.appName="Tedious"] - A default value is checked for under the `RHINO_MSSQL_APP_NAME` environmental variable.
+ * @property {Number} [options.connectTimeout=15000]
+ * @property {Number} [options.requestTimeout=15000]
+ * @property {Number} [options.cancelTimeout=5000]
+ * @property {Number} [options.connectionRetryInterval=500]
+ * @property {Boolean} [options.encrypt=false] - A default value is checked for under the `RHINO_MSSQL_ENCRYPT` environmental variable.
  * @property {Object} [authentication]
  * @property {String} [authentication.type="default"] - A default value is checked for under the `RHINO_MSSQL_AUTH_TYPE` environmental variable.
  * @property {Object} [authentication.options]
  * @property {String} [authentication.options.userName] - A default value is checked for under the `RHINO_MSSQL_USER` then `RHINO_MSSQL_AUTH_USER` environmental variables.
  * @property {String} [authentication.options.password] - A default value is checked for under the `RHINO_MSSQL_PASSWORD` then `RHINO_MSSQL_AUTH_PASSWORD` environmental variables.
  * @property {String} [authentication.options.domain] - A default value is checked for under the `RHINO_MSSQL_DOMAIN` then `RHINO_MSSQL_AUTH_DOMAIN` environmental variables.
- * @property {String} [tdsVersion="7_4"]
- * @property {String} [dateFormat="mdy"]
- * @property {Boolean} [fallbackToDefaultDb=false]
- * @property {Boolean} [enableAnsiNull=true]
- * @property {Boolean} [enableAnsiNullDefault=true]
- * @property {Boolean} [enableAnsiPadding=true]
- * @property {Boolean} [enableAnsiWarnings=true]
- * @property {Boolean} [enableConcatNullYieldsNull=true]
- * @property {Boolean} [enableCursorCloseOnCommit=false]
- * @property {Boolean} [enableImplicitTransactions=false]
- * @property {Boolean} [enableNumericRoundabort=false]
- * @property {Boolean} [enableQuotedIdentifier=true]
- * @property {Boolean} [rowCollectionOnDone=false]
- * @property {Boolean} [rowCollectionOnRequestCompletion=false]
- * @property {Number} [packetSize=4096]
- * @property {Boolean} [useUTC=true]
- * @property {Boolean} [abortTransactionOnError=null]
- * @property {String} [localAddress=null]
- * @property {Boolean} [useColumnNames=false]
- * @property {Boolean} [camelCaseColumns=false]
- * @property {Boolean} [columnNameReplacer=null]
- * @property {String} [isolationLevel="READ_COMMITED"]
- * @property {String} [connectionIsolationLevel="READ_COMMITED"]
- * @property {Boolean} [readOnlyIntent=false]
- * @property {Object} [cryptoCredentialsDetails]
+ * @property {String} [options.tdsVersion="7_4"]
+ * @property {String} [options.dateFormat="mdy"]
+ * @property {Boolean} [options.fallbackToDefaultDb=false]
+ * @property {Boolean} [options.enableAnsiNull=true]
+ * @property {Boolean} [options.enableAnsiNullDefault=true]
+ * @property {Boolean} [options.enableAnsiPadding=true]
+ * @property {Boolean} [options.enableAnsiWarnings=true]
+ * @property {Boolean} [options.enableConcatNullYieldsNull=true]
+ * @property {Boolean} [options.enableCursorCloseOnCommit=false]
+ * @property {Boolean} [options.enableImplicitTransactions=false]
+ * @property {Boolean} [options.enableNumericRoundabort=false]
+ * @property {Boolean} [options.enableQuotedIdentifier=true]
+ * @property {Boolean} [options.rowCollectionOnDone=false]
+ * @property {Boolean} [options.rowCollectionOnRequestCompletion=false]
+ * @property {Number} [options.packetSize=4096]
+ * @property {Boolean} [options.useUTC=true]
+ * @property {Boolean} [options.abortTransactionOnError=null]
+ * @property {String} [options.localAddress=null]
+ * @property {Boolean} [options.useColumnNames=false]
+ * @property {Boolean} [options.camelCaseColumns=false]
+ * @property {Boolean} [options.columnNameReplacer=null]
+ * @property {String} [options.isolationLevel="READ_COMMITED"]
+ * @property {String} [options.connectionIsolationLevel="READ_COMMITED"]
+ * @property {Boolean} [options.readOnlyIntent=false]
+ * @property {Object} [options.cryptoCredentialsDetails]
  */
 
 /**
@@ -67,8 +68,8 @@ require('dotenv').load();
 
 /**
  * @typedef LogConfiguration
- * @property {Boolean|String} mode - Can be 'error', 'warn', or 'debug for enabled logging levels. A falsey value will
- * disable logging. A truthy value that is not a string will assume 'warn' mode.
+ * @property {Boolean|String} mode - Can be 'none', 'error', 'warn', or 'debug for enabled logging levels. A falsey
+ * value will disable logging. A truthy value that is not a string will assume 'warn' mode.
  */
 
 /**
@@ -76,13 +77,15 @@ require('dotenv').load();
  * @typedef RhinoBaseConfiguration
  * @property {PoolConfiguration} [pool]
  * @property {LogConfiguration} [logging]
+ * @property {Number} [connectionRetries=3] - The number of attempts to connect should the first connection attempt 
+ * fail due to socket/network errors (ESOCKET). Other errors, such as those related to authentication are *not* retried.
  */
 
 /**
  * Rhino's configuration fully implements all configuration properties from `tedious`.
  * @see {@link http://tediousjs.github.io/tedious/api-connection.html#function_newConnection|Tedious}
  * @see {@link https://github.com/Vincit/tarn.js|Tarn}
- * @typedef {TediousConfiguration | RhinoBaseConfiguration} RhinoConfiguration
+ * @typedef {TediousConfiguration} RhinoConfiguration
  */
 
 /**
@@ -261,20 +264,20 @@ class Rhino {
     static create(config) {
         return new Rhino(config);
     }
- 
+
     /**
      * Returns a default `RhinoConfiguration` object. Default values are first searched for in environmental variables
      * then, if not found, with hard-coded default values.
      * @returns {RhinoConfiguration}
      */
     static defaultConfig() {
-        return {
+        let dc = {
             server: process.env.RHINO_MSSQL_HOST || process.env.RHINO_MSSQL_SERVER || 'localhost',
-            port: process.env.RHINO_MSSQL_PORT || 1433,
-            instanceName: process.env.RHINO_MSSQL_INSTANCE || process.env.RHINO_MSSQL_INSTANCE_NAME || null,
-            database: process.env.RHINO_MSSQL_DATABASE || null,
-            appName: process.env.RHINO_MSSQL_APP_NAME || null,
-            encrypt: process.env.RHINO_MSSQL_ENCRYPT || false,
+            options: {
+                port: process.env.RHINO_MSSQL_PORT || 1433,
+                encrypt: process.env.RHINO_MSSQL_ENCRYPT || false,
+                connectionRetries: 3
+            },
             authentication: {
                 type: process.env.RHINO_MSSQL_AUTH_TYPE || 'default',
                 options: {
@@ -282,8 +285,21 @@ class Rhino {
                     password: process.env.RHINO_MSSQL_PASSWORD || process.env.RHINO_MSSQL_AUTH_PASSWORD || null,
                     domain: process.env.RHINO_MSSQL_DOMAIN || process.env.RHINO_MSSQL_AUTH_DOMAIN || null
                 }
+            },
+            logging: {
+                mode: (typeof process.env.RHINO_LOGGING !== 'undefined' ? process.env.RHINO_LOGGING : false)
             }
         };
+        if (process.env.RHINO_MSSQL_INSTANCE || process.env.RHINO_MSSQL_INSTANCE_NAME) {
+            dc.options.instanceName = process.env.RHINO_MSSQL_INSTANCE || process.env.RHINO_MSSQL_INSTANCE_NAME;
+        }
+        if (process.env.RHINO_MSSQL_DATABASE) {
+            dc.options.database = process.env.RHINO_MSSQL_DATABASE;
+        }
+        if (process.env.RHINO_MSSQL_APP_NAME) {
+            dc.options.appName = process.env.RHINO_MSSQL_APP_NAME;
+        }
+        return dc;
     }
 
 }

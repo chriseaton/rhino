@@ -11,13 +11,15 @@ class Log {
         /**
          * @type {LogConfiguration}
          */
-        this.config = Object.assign({
-            mode: (typeof process.env.RHINO_LOGGING !== 'undefined' ? process.env.RHINO_LOGGING : false)
-        }, config);
-        
+        this.config = config || {};
+
         //ensure mode is a string
-        if (this.config.mode && typeof this.config.mode !== 'string') {
-            this.config.mode = 'warn';
+        if (this.config.mode) {
+            if (typeof this.config.mode !== 'string') {
+                this.config.mode = 'warn';
+            } else if (this.config.mode === 'none') {
+                this.config.mode = false;
+            }
         }
     }
 
