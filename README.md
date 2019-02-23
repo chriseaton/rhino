@@ -68,6 +68,10 @@ dbc.destroy();
 ## Classes
 
 <dl>
+<dt><a href="#EventTracker">EventTracker</a></dt>
+<dd><p>Provides tooling to easily track event listeners and remove them from <code>EventEmitter</code> instances without affecting 
+listeners added from other operations.</p>
+</dd>
 <dt><a href="#Log">Log</a></dt>
 <dd><p>This logging class utilizes 3 modes of logging: error, warn, and debug.
 The mode can be set by specifying one of the modes in the <code>RHINO_LOGGING</code> environmental variable, or through a
@@ -101,6 +105,106 @@ For more details, please refer to: <a href="http://tediousjs.github.io/tedious/a
 <dd><p>Rhino&#39;s configuration fully implements all configuration properties from <code>tedious</code>.</p>
 </dd>
 </dl>
+
+<a name="EventTracker"></a>
+
+## EventTracker
+Provides tooling to easily track event listeners and remove them from `EventEmitter` instances without affecting 
+listeners added from other operations.
+
+**Kind**: global class  
+
+* [EventTracker](#EventTracker)
+    * [new EventTracker()](#new_EventTracker_new)
+    * _instance_
+        * [.listeners](#EventTracker+listeners) : [<code>Array.&lt;RegisteredEventListener&gt;</code>](#EventTracker.RegisteredEventListener)
+        * [.removeFrom(emitter, [event], [unregister])](#EventTracker+removeFrom)
+        * [.register(event, ...listeners)](#EventTracker+register)
+        * [.unregister([event], [...listeners])](#EventTracker+unregister)
+    * _static_
+        * [.RegisteredEventListener](#EventTracker.RegisteredEventListener)
+
+
+* * *
+
+<a name="new_EventTracker_new"></a>
+
+### new EventTracker()
+Creates a new `EventTracker` instance.
+
+
+* * *
+
+<a name="EventTracker+listeners"></a>
+
+### eventTracker.listeners : [<code>Array.&lt;RegisteredEventListener&gt;</code>](#EventTracker.RegisteredEventListener)
+Array containing all of the registered event listeners in this tracker instance.
+
+**Kind**: instance property of [<code>EventTracker</code>](#EventTracker)  
+
+* * *
+
+<a name="EventTracker+removeFrom"></a>
+
+### eventTracker.removeFrom(emitter, [event], [unregister])
+Removes all registered matching event listeners from the specified emitter.
+
+**Kind**: instance method of [<code>EventTracker</code>](#EventTracker)  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| emitter | <code>EventEmitter</code> | The instance implementing the EventEmitter "removeListener" function. |
+| [event] | <code>String</code> \| <code>symbol</code> | Optional event to target for removal. Only listeners under the event will be removed. |
+| [unregister] | <code>Boolean</code> | Removes the registered listeners after they have been removed from the emitter. Works with the `event` parameter, if specified. If a listerner is not found, on the emitter, it is not unregistered. |
+
+
+* * *
+
+<a name="EventTracker+register"></a>
+
+### eventTracker.register(event, ...listeners)
+Registers one or more event listeners.
+
+**Kind**: instance method of [<code>EventTracker</code>](#EventTracker)  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| event | <code>String</code> \| <code>Symbol</code> | The event name or symbol. |
+| ...listeners | <code>function</code> | The listener functions. |
+
+
+* * *
+
+<a name="EventTracker+unregister"></a>
+
+### eventTracker.unregister([event], [...listeners])
+Un-registers one or more event listeners by matching the event and/or listener function(s). Either, both, or 
+none of the parameters may be specified. If both event and listerner(s) are not specified, all listeners are
+unregistered.
+
+**Kind**: instance method of [<code>EventTracker</code>](#EventTracker)  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| [event] | <code>String</code> \| <code>Symbol</code> | The event name or symbol to match for unregistering listeners. |
+| [...listeners] | <code>function</code> | The listener functions to unregister. If none are specified, all listeners under the event are unregistered. |
+
+
+* * *
+
+<a name="EventTracker.RegisteredEventListener"></a>
+
+### EventTracker.RegisteredEventListener
+**Kind**: static typedef of [<code>EventTracker</code>](#EventTracker)  
+**Properties**
+
+| Name | Type |
+| --- | --- |
+| event | <code>String</code> \| <code>Symbol</code> | 
+| listener | <code>function</code> | 
+
+
+* * *
 
 <a name="Log"></a>
 
