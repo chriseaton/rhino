@@ -1,6 +1,7 @@
 const crypto = require('crypto');
 const { EventEmitter } = require('events');
 const tedious = require('tedious');
+const EventTracker = require('./event-tracker.js');
 const Log = require('./log.js');
 
 /**
@@ -90,8 +91,39 @@ class Connection extends EventEmitter {
         }
     }
 
-    _handleConnect(err) {
+    /**
+     * Resets a tedious connection.
+     * @param {tedious.Connection} conn - The connection to reset.
+     */
+    _resetConnection(conn) {
+    }
 
+    /**
+     * Creates and establishes a new tds connection.
+     * @param {tedious.Connection} conn - The connection instance to establish
+     */
+    async _establishConnection(conn) {
+        await new Promise((resolve, reject) => {
+            let et = new EventTracker();
+            let connectHandler = (err) => {
+                et.removeFrom(conn);
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(conn);
+                }
+            };
+            let errorHandler = (err) => {
+                if (err) {
+                    et.removeFrom(conn);
+                    reject(err);
+                }
+            };
+            et.register('connect', connectHandler);
+            conn.once('connect', connectHandler);
+            et.register('error', errorHandler);
+            conn.once('error', errorHandler);
+        });
     }
 
     /**

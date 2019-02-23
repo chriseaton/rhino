@@ -30,7 +30,7 @@ describe('Multiple Connection instances.', () => {
         } catch (err) {
             throw err;
         }
-    }, 5*60*1000);
+    }, 5 * 60 * 1000);
     test('Handles connection storm of randomized connects/disconnects (100 instances, 100 iterations).', async () => {
         let connections = [];
         let storm = [];
@@ -97,7 +97,7 @@ describe('#connect', () => {
             await c.disconnect();
         }
     });
-    test.only('Reconnects to the database when using the @reset = true argument.', async () => {
+    test('Reconnects to the database when using the @reset = true argument.', async () => {
         let c = new Connection(rhino.defaultConfig());
         expect.assertions(4);
         try {
@@ -114,6 +114,28 @@ describe('#connect', () => {
             await c.disconnect();
         }
     });
+    // test.only('blah.', async () => {
+    //     let tedious = require('tedious');
+    //     let c = new Connection(rhino.defaultConfig());
+    //     await c.connect(true);
+    //     expect(c.connected).toBe(true);
+    //     await c.disconnect();
+    //     let conn = c._tdsConnection;
+    //     conn.connect();
+    //     console.log(conn)
+    //     // await new Promise((resolve, reject) => {
+    //     //     let request = new tedious.Request("select 42, 'hello world'", function (err, rowCount) {
+    //     //         if (err) {
+    //     //             console.log(err);
+    //     //             reject(err);
+    //     //         } else {
+    //     //             console.log(rowCount + ' rows');
+    //     //             resolve();
+    //     //         }
+    //     //     });
+    //     //     conn.execSql(request);
+    //     // });
+    // });
 });
 
 describe('#disconect', () => {
