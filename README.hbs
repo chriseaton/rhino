@@ -8,11 +8,11 @@ Rhino is a tough, production-focused Node.js Microsoft SQL Server driver that in
 the [tedious](http://tediousjs.github.io/tedious/api-connection.html#function_newConnection) driver. 
 
 Here's why Rhino is a solid choice:
+- Fully implemented JSdoc, tested with [VS Code](https://code.visualstudio.com/) auto-completion.
 - Purposefully uses very few dependencies.
 - Solid, modern, unit-tested implementation built for heavy production use. 
 - Employs async/await/Promise operations to keep your queries running quickly.
-- Manages connections for you using an internal pool, tested with up to 10,000 simultaneous connections. 
-  Stop worrying about connections and just build queries.
+- Manages connections for you using an internal pool, stop worrying about connections and just build queries.
 - Open-source and accepting positive contributions.
 
 ## Installation
@@ -27,7 +27,7 @@ npm i rhino --save
 const rhino = require('rhino');
 
 ...
-let dbc = await rhino.create({
+let db = await rhino.create({
     server: 'localhost',
     authentication: {
         options: {  
@@ -40,10 +40,27 @@ let dbc = await rhino.create({
         max: 10
     }
 });
-let results = await dbc.query('SELECT * FROM dbo.People');
+
+//simple query
+let results = await db.query('SELECT * FROM dbo.People');
 console.log(`Count: ${results.count}`);
 console.log(results.rows);
-dbc.destroy(); 
+
+//constructed query
+let q = Query
+          .sql(`SELECT @valid=IsCustomer 
+                FROM contacts 
+                WHERE name LIKE @firstName AND account = @number`)
+          .in('firstName', 'John')
+          .in('account', Query.TYPE.INT, 23494893)
+          .out('valid', Query.TYPE.BIT);
+results = await db.query(q);
+console.log(`Count: ${results.count}`);
+console.log(results.rows);
+
+...
+//all done, forever!
+db.destroy(); 
 ```
 
 ### Transactions
