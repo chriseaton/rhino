@@ -1,6 +1,16 @@
 /* eslint-disable no-console */
 
 /**
+ * @typedef Log.LogConfiguration
+ * @property {Boolean|String} mode - Can be 'none', 'error', 'warn', or 'debug for enabled logging levels. A falsey
+ * value will disable logging. A truthy value that is not a string will assume 'warn' mode.
+ * @property {Boolean} [connections=false] - Flag that indicates whether to log connection state messages. These 
+ * messages are entered on the debug log.
+ * @property {Boolean} [tds=false] - Indicates whether to log debug and info messages from underlying TDS connections.
+ * These messages are entered on the debug log.
+ */
+
+/**
  * This logging class utilizes 3 modes of logging: error, warn, and debug.
  * The mode can be set by specifying one of the modes in the `RHINO_LOGGING` environmental variable, or through a
  * `rhino` instance's `config.logging.mode` property.
@@ -9,7 +19,7 @@ class Log {
     constructor(config) {
 
         /**
-         * @type {LogConfiguration}
+         * @type {Log.LogConfiguration}
          */
         this.config = config || {};
 

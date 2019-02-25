@@ -6,57 +6,8 @@ const Transaction = require('./transaction.js');
 require('dotenv').load();
 
 /**
- * The tedious configuration options are all fully supported. Some options support default values from environmental
- * variables, all of which use the `RHINO_MSSQL_` prefix.
- * For more details, please refer to: {@link http://tediousjs.github.io/tedious/api-connection.html#function_newConnection|Tedious on GitHub}
- * @typedef TediousConfiguration
- * @property {String} [server="localhost"] - A default value is checked for under the `RHINO_MSSQL_HOST` then `RHINO_MSSQL_SERVER` environmental variables.
- * @property {Object} [options]
- * @property {Number} [options.port=1433] - A default value is checked for under the `RHINO_MSSQL_PORT` environmental variable.
- * @property {String} [options.instanceName=null] - A default value is checked for under the `RHINO_MSSQL_INSTANCE` then `RHINO_MSSQL_INSTANCE_NAME` environmental variables.
- * @property {String} [options.database="master"] - A default value is checked for under the `RHINO_MSSQL_DATABASE` environmental variable.
- * @property {String} [options.appName="Tedious"] - A default value is checked for under the `RHINO_MSSQL_APP_NAME` environmental variable.
- * @property {Number} [options.connectTimeout=15000]
- * @property {Number} [options.requestTimeout=15000]
- * @property {Number} [options.cancelTimeout=5000]
- * @property {Number} [options.connectionRetryInterval=500]
- * @property {Boolean} [options.encrypt=false] - A default value is checked for under the `RHINO_MSSQL_ENCRYPT` environmental variable.
- * @property {Object} [authentication]
- * @property {String} [authentication.type="default"] - A default value is checked for under the `RHINO_MSSQL_AUTH_TYPE` environmental variable.
- * @property {Object} [authentication.options]
- * @property {String} [authentication.options.userName] - A default value is checked for under the `RHINO_MSSQL_USER` then `RHINO_MSSQL_AUTH_USER` environmental variables.
- * @property {String} [authentication.options.password] - A default value is checked for under the `RHINO_MSSQL_PASSWORD` then `RHINO_MSSQL_AUTH_PASSWORD` environmental variables.
- * @property {String} [authentication.options.domain] - A default value is checked for under the `RHINO_MSSQL_DOMAIN` then `RHINO_MSSQL_AUTH_DOMAIN` environmental variables.
- * @property {String} [options.tdsVersion="7_4"]
- * @property {String} [options.dateFormat="mdy"]
- * @property {Boolean} [options.fallbackToDefaultDb=false]
- * @property {Boolean} [options.enableAnsiNull=true]
- * @property {Boolean} [options.enableAnsiNullDefault=true]
- * @property {Boolean} [options.enableAnsiPadding=true]
- * @property {Boolean} [options.enableAnsiWarnings=true]
- * @property {Boolean} [options.enableConcatNullYieldsNull=true]
- * @property {Boolean} [options.enableCursorCloseOnCommit=false]
- * @property {Boolean} [options.enableImplicitTransactions=false]
- * @property {Boolean} [options.enableNumericRoundabort=false]
- * @property {Boolean} [options.enableQuotedIdentifier=true]
- * @property {Boolean} [options.rowCollectionOnDone=false]
- * @property {Boolean} [options.rowCollectionOnRequestCompletion=false]
- * @property {Number} [options.packetSize=4096]
- * @property {Boolean} [options.useUTC=true]
- * @property {Boolean} [options.abortTransactionOnError=null]
- * @property {String} [options.localAddress=null]
- * @property {Boolean} [options.useColumnNames=false]
- * @property {Boolean} [options.camelCaseColumns=false]
- * @property {Boolean} [options.columnNameReplacer=null]
- * @property {String} [options.isolationLevel="READ_COMMITED"]
- * @property {String} [options.connectionIsolationLevel="READ_COMMITED"]
- * @property {Boolean} [options.readOnlyIntent=false]
- * @property {Object} [options.cryptoCredentialsDetails]
- */
-
-/**
  * Please refer to:  {@link https://github.com/Vincit/tarn.js|Tarn on GitHub}
- * @typedef PoolConfiguration
+ * @typedef Rhino.PoolConfiguration
  * @property {Number} [max=1]
  * @property {Number} [min=0]
  * @property {Number} [acquireTimeoutMillis=30000]
@@ -67,25 +18,17 @@ require('dotenv').load();
  */
 
 /**
- * @typedef LogConfiguration
- * @property {Boolean|String} mode - Can be 'none', 'error', 'warn', or 'debug for enabled logging levels. A falsey
- * value will disable logging. A truthy value that is not a string will assume 'warn' mode.
- */
-
-/**
  * 
- * @typedef RhinoBaseConfiguration
- * @property {PoolConfiguration} [pool]
- * @property {LogConfiguration} [logging]
- * @property {Number} [connectionRetries=3] - The number of attempts to connect should the first connection attempt 
- * fail due to socket/network errors (ESOCKET). Other errors, such as those related to authentication are *not* retried.
+ * @typedef Rhino.RhinoBaseConfiguration
+ * @property {Rhino.PoolConfiguration} [pool]
+ * @property {Log.LogConfiguration} [logging]
  */
 
 /**
  * Rhino's configuration fully implements all configuration properties from `tedious`.
  * @see {@link http://tediousjs.github.io/tedious/api-connection.html#function_newConnection|Tedious}
  * @see {@link https://github.com/Vincit/tarn.js|Tarn}
- * @typedef {TediousConfiguration} RhinoConfiguration
+ * @typedef {Connection.TediousConfiguration | Rhino.RhinoBaseConfiguration} Rhino.RhinoConfiguration
  */
 
 /**
@@ -99,13 +42,13 @@ require('dotenv').load();
 class Rhino {
     /**
      * Constructs a `Rhino` instance using the specified `config` values.
-     * @param {RhinoConfiguration} [config] - Configuration values to use in this `Rhino` instance. Any properties not
+     * @param {Rhino.RhinoConfiguration} [config] - Configuration values to use in this `Rhino` instance. Any properties not
      * explicitly specified will use the default values.
      */
     constructor(config) {
 
         /**
-         * @type {RhinoConfiguration}
+         * @type {Rhino.RhinoConfiguration}
          */
         this.config = Object.assign(Rhino.defaultConfig(), config);
 
@@ -232,12 +175,26 @@ class Rhino {
     }
 
     async transaction() {
-        let res = await this._pool.acquire();
-        return new Transaction(res);
+        return new Transaction(this);
     }
 
+    /**
+     * Runs a SQL statement on the database and returns the results.
+     * 
+     * Note: This call is not meant to process batch statements. Use the `batch` function instead.
+     * @param {String} sql - The SQL statement to execute.
+     * @param  {...any} [parameters] - Any parameters used with a string `sql` argument statement.
+     */
     async query(sql, ...parameters) {
         let res = await this._pool.acquire();
+    }
+
+    /**
+     * 
+     * @param {String} sql 
+     */
+    async batch(sql) {
+        throw Error('Not implemented yet.');
     }
 
     /**
