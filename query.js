@@ -237,11 +237,20 @@ Query.TYPE = TDS_TYPES;
  * value is provided. Only certain types can be configured.
  */
 Query.AUTODETECT_TYPES = {
-    /** The TDS type used when a floating point number value is detected. */
+    /** 
+     * The TDS type used when a floating point number value is detected. 
+     * Defaults to `Float`.
+     */
     FLOATING_POINT: TDS_TYPES.Float,
-    /** The TDS type used when a Date object value is detected. */
+    /** 
+     * The TDS type used when a Date object value is detected.
+     * Defaults to `DateTimeOffset`.
+     */
     DATETIME: TDS_TYPES.DateTimeOffset,
-    /** The TDS type used when a Buffer object value is detected. */
+    /** 
+     * The TDS type used when a Buffer object value is detected. 
+     * Defaults to `VarBinary`.
+     */
     BUFFER: TDS_TYPES.VarBinary
 };
 
