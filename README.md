@@ -47,14 +47,12 @@ console.log(`Count: ${results.count}`);
 console.log(results.rows);
 
 //constructed query
-let q = Query
-          .sql(`SELECT @valid=IsCustomer 
-                FROM contacts 
-                WHERE name LIKE @firstName AND account = @number`)
-          .in('firstName', 'John')
-          .in('account', Query.TYPE.INT, 23494893)
-          .out('valid', Query.TYPE.BIT);
-results = await db.query(q);
+results = await db.query(`SELECT @valid=IsCustomer 
+                          FROM contacts 
+                          WHERE name LIKE @firstName AND account = @number`)
+                            .input('firstName', 'John')
+                            .input('account', Query.TYPE.INT, 23494893)
+                            .output('valid', 'BIT');
 console.log(`Count: ${results.count}`);
 console.log(results.rows);
 
@@ -107,6 +105,8 @@ and closing of connections to the database. </p>
 <p>You can use multiple instances of the Rhino class in your application - each one can utilize a different 
 configuration.</p>
 </dd>
+<dt><a href="#Transaction">Transaction</a></dt>
+<dd></dd>
 </dl>
 
 <a name="Connection"></a>
@@ -495,10 +495,19 @@ Wraps a SQL query and provides helper functions for managing parameters.
 
 * [Query](#Query)
     * [new Query()](#new_Query_new)
-    * [.in(name, [type], [value])](#Query+in) ⇒ [<code>Query</code>](#Query)
-    * [.out(name, type)](#Query+out) ⇒ [<code>Query</code>](#Query)
-    * [.remove(name)](#Query+remove) ⇒ <code>Boolean</code>
-    * [.clear()](#Query+clear)
+    * _instance_
+        * [.sql(statement)](#Query+sql) ⇒ [<code>Query</code>](#Query)
+        * [.in(name, [type], [value])](#Query+in) ⇒ [<code>Query</code>](#Query)
+        * [.out(name, type)](#Query+out) ⇒ [<code>Query</code>](#Query)
+        * [.remove(name)](#Query+remove) ⇒ <code>Boolean</code>
+        * [.clear()](#Query+clear)
+    * _static_
+        * [.TYPE](#Query.TYPE)
+        * [.AUTODETECT_TYPES](#Query.AUTODETECT_TYPES)
+            * [.FLOATING_POINT](#Query.AUTODETECT_TYPES.FLOATING_POINT)
+            * [.DATETIME](#Query.AUTODETECT_TYPES.DATETIME)
+            * [.BUFFER](#Query.AUTODETECT_TYPES.BUFFER)
+        * [.TDSType](#Query.TDSType)
 
 
 * * *
@@ -518,7 +527,30 @@ let q = Query
          .in('firstName', 'John')
          .in('account', Query.TYPE.INT, 23494893)
          .out('valid', Query.TYPE.BIT);
+//remove a parameter by name
+q.remove('account');
+//reset everything
+q.clear();
 ```
+
+* * *
+
+<a name="Query+sql"></a>
+
+### query.sql(statement) ⇒ [<code>Query</code>](#Query)
+Sets the SQL query text (statment).
+
+**Kind**: instance method of [<code>Query</code>](#Query)  
+**Throws**:
+
+- Error if the `statement` argument is falsey.
+- Error if the `statement` argument is not a string.
+
+
+| Param | Type | Description |
+| --- | --- | --- |
+| statement | <code>String</code> | The SQL query text to be executed. |
+
 
 * * *
 
@@ -530,13 +562,15 @@ Adds an input parameter to the query.
 **Kind**: instance method of [<code>Query</code>](#Query)  
 **Throws**:
 
-- Error if the name has already been specified or is not specified as a string.
+- Error if the `name` argument is falsey.
+- Error if the `name` argument is not a string.
+- Error if the `name` argument has already been specified or is not specified as a string.
 
 
 | Param | Type | Default | Description |
 | --- | --- | --- | --- |
 | name | <code>String</code> |  | The parameter name, can be specified with the '@' character or not. |
-| [type] | <code>\*</code> |  | The explicit database type to use, if not specified, it is auto-determined. This parameter can be omitted. |
+| [type] | <code>String</code> \| [<code>TDSType</code>](#Query.TDSType) |  | The explicit database type to use, if not specified, it is auto-determined. This parameter can be omitted. |
 | [value] | <code>String</code> \| <code>Number</code> \| <code>Date</code> \| <code>Buffer</code> \| <code>Object</code> \| <code>\*</code> | <code></code> | The value of the parameter. |
 
 
@@ -550,8 +584,10 @@ Adds an output parameter to the query.
 **Kind**: instance method of [<code>Query</code>](#Query)  
 **Throws**:
 
-- Error if the name has already been specified or is not specified as a string.
-- Error if the type is not specified.
+- Error if the `name` argument is falsey.
+- Error if the `name` argument is not a string.
+- Error if the `name` argument has already been specified or is not specified as a string.
+- Error if the `type` argument is falsey.
 
 
 | Param | Type | Description |
@@ -570,6 +606,11 @@ Removes a parameter by name.
 **Kind**: instance method of [<code>Query</code>](#Query)  
 **Returns**: <code>Boolean</code> - Returns `true` if a parameter with the name was found and removed, or `false` if no parameter
 was found with the given name.  
+**Throws**:
+
+- Error if the `name` argument is falsey.
+- Error if the `name` argument is not a string.
+
 
 | Param | Type | Description |
 | --- | --- | --- |
@@ -585,6 +626,76 @@ Clears all query criteria, including SQL statement values and parameters. The `Q
 to a blank slate.
 
 **Kind**: instance method of [<code>Query</code>](#Query)  
+
+* * *
+
+<a name="Query.TYPE"></a>
+
+### Query.TYPE
+TDS column types.
+
+**Kind**: static property of [<code>Query</code>](#Query)  
+
+* * *
+
+<a name="Query.AUTODETECT_TYPES"></a>
+
+### Query.AUTODETECT\_TYPES
+Auto-detection types used when a type is not specifically detected, but a 
+value is provided. Only certain types can be configured.
+
+**Kind**: static property of [<code>Query</code>](#Query)  
+
+* [.AUTODETECT_TYPES](#Query.AUTODETECT_TYPES)
+    * [.FLOATING_POINT](#Query.AUTODETECT_TYPES.FLOATING_POINT)
+    * [.DATETIME](#Query.AUTODETECT_TYPES.DATETIME)
+    * [.BUFFER](#Query.AUTODETECT_TYPES.BUFFER)
+
+
+* * *
+
+<a name="Query.AUTODETECT_TYPES.FLOATING_POINT"></a>
+
+#### AUTODETECT_TYPES.FLOATING\_POINT
+The TDS type used when a floating point number value is detected. 
+Defaults to `Float`.
+
+**Kind**: static property of [<code>AUTODETECT\_TYPES</code>](#Query.AUTODETECT_TYPES)  
+
+* * *
+
+<a name="Query.AUTODETECT_TYPES.DATETIME"></a>
+
+#### AUTODETECT_TYPES.DATETIME
+The TDS type used when a Date object value is detected.
+Defaults to `DateTimeOffset`.
+
+**Kind**: static property of [<code>AUTODETECT\_TYPES</code>](#Query.AUTODETECT_TYPES)  
+
+* * *
+
+<a name="Query.AUTODETECT_TYPES.BUFFER"></a>
+
+#### AUTODETECT_TYPES.BUFFER
+The TDS type used when a Buffer object value is detected. 
+Defaults to `VarBinary`.
+
+**Kind**: static property of [<code>AUTODETECT\_TYPES</code>](#Query.AUTODETECT_TYPES)  
+
+* * *
+
+<a name="Query.TDSType"></a>
+
+### Query.TDSType
+**Kind**: static typedef of [<code>Query</code>](#Query)  
+**Properties**
+
+| Name | Type |
+| --- | --- |
+| id | <code>Number</code> | 
+| name | <code>String</code> | 
+| type | <code>String</code> | 
+
 
 * * *
 
@@ -607,7 +718,7 @@ configuration.
         * [.log](#Rhino+log) : [<code>Log</code>](#Log)
         * [.destroy([done])](#Rhino+destroy)
         * [.ping()](#Rhino+ping) ⇒ <code>Boolean</code>
-        * [.query(sql, [...parameters])](#Rhino+query)
+        * [.query(sql)](#Rhino+query) ⇒ [<code>ConnectedQuery</code>](#new_ConnectedQuery_new)
         * [.batch(sql)](#Rhino+batch)
     * _static_
         * [.create([config])](#Rhino.create) ⇒ [<code>Rhino</code>](#Rhino)
@@ -677,7 +788,7 @@ connection cannot be aquired for any reason.
 
 <a name="Rhino+query"></a>
 
-### rhino.query(sql, [...parameters])
+### rhino.query(sql) ⇒ [<code>ConnectedQuery</code>](#new_ConnectedQuery_new)
 Runs a SQL statement on the database and returns the results.
 
 Note: This call is not meant to process batch statements. Use the `batch` function instead.
@@ -687,7 +798,6 @@ Note: This call is not meant to process batch statements. Use the `batch` functi
 | Param | Type | Description |
 | --- | --- | --- |
 | sql | <code>String</code> | The SQL statement to execute. |
-| [...parameters] | <code>any</code> | Any parameters used with a string `sql` argument statement. |
 
 
 * * *
@@ -790,6 +900,38 @@ Rhino's configuration fully implements all configuration properties from `tediou
 - [Tedious](http://tediousjs.github.io/tedious/api-connection.html#function_newConnection)
 - [Tarn](https://github.com/Vincit/tarn.js)
 
+
+* * *
+
+<a name="Transaction"></a>
+
+## Transaction
+**Kind**: global class  
+
+* [Transaction](#Transaction)
+    * [new Transaction(conn)](#new_Transaction_new)
+    * [.rhino](#Transaction+rhino) : [<code>Rhino</code>](#Rhino)
+
+
+* * *
+
+<a name="new_Transaction_new"></a>
+
+### new Transaction(conn)
+
+| Param | Type | Description |
+| --- | --- | --- |
+| conn | [<code>Connection</code>](#Connection) | The connection used by the transaction. |
+
+
+* * *
+
+<a name="Transaction+rhino"></a>
+
+### transaction.rhino : [<code>Rhino</code>](#Rhino)
+The rhino instance linked to this query.
+
+**Kind**: instance property of [<code>Transaction</code>](#Transaction)  
 
 * * *
 

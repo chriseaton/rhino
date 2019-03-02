@@ -47,14 +47,12 @@ console.log(`Count: ${results.count}`);
 console.log(results.rows);
 
 //constructed query
-let q = Query
-          .sql(`SELECT @valid=IsCustomer 
-                FROM contacts 
-                WHERE name LIKE @firstName AND account = @number`)
-          .in('firstName', 'John')
-          .in('account', Query.TYPE.INT, 23494893)
-          .out('valid', Query.TYPE.BIT);
-results = await db.query(q);
+results = await db.query(`SELECT @valid=IsCustomer 
+                          FROM contacts 
+                          WHERE name LIKE @firstName AND account = @number`)
+                            .input('firstName', 'John')
+                            .input('account', Query.TYPE.INT, 23494893)
+                            .output('valid', 'BIT');
 console.log(`Count: ${results.count}`);
 console.log(results.rows);
 
