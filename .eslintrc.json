@@ -47,6 +47,9 @@
         "no-console": [
             "warn"
         ],
+        "no-control-regex": [
+            "off"
+        ],
         "valid-jsdoc": [
             "warn",
             {
