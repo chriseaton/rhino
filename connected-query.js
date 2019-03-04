@@ -21,7 +21,7 @@ class ConnectedQuery extends Query {
          * The `tarn.Pool` instance linked to this query.
          * @type {tarn.Pool}
          */
-        this.pool = null;
+        this.pool = pool;
     }
 
     /**
@@ -31,16 +31,19 @@ class ConnectedQuery extends Query {
      * @param {Function} [reject] - Promise callback called when the work fails.
      */
     then(resolve, reject) {
-        if (!this.pool) {
+        let p = this.pool;
+        if (!p) {
             if (reject) {
                 reject(new Error('The "pool" property is required.'));
             }
             return;
         }
         //execute the query directly on TDS connection.
-        this.pool.acquire()
+        p.acquire().promise
             .then((res) => {
-                //TODO execute!!!
+                console.log(res);
+                resolve('ok');
+                p.release(res);
             })
             .catch((err) => {
                 if (reject) {

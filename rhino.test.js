@@ -24,3 +24,18 @@ describe('#ping', () => {
         expect(results).toBe(false);
     });
 });
+
+describe('#query', () => {
+    let db = null;
+    beforeAll(() => {
+        db = rhino.create();
+    });
+    afterAll(() => {
+        db.destroy();
+    });
+    test.only('runs a simple select query.', async () => {
+        let r = await db.query('SELECT 1;');
+        console.log(r);
+        expect(r).toBeTruthy();
+    });
+});

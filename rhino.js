@@ -187,7 +187,7 @@ class Rhino {
      * @returns {ConnectedQuery}
      */
     async query(sql) {
-        return new ConnectedQuery(this._pool);
+        return new ConnectedQuery(this._pool).sql(sql);
     }
 
     /**
