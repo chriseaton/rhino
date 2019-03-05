@@ -1,4 +1,4 @@
-const TDS_TYPES = require('tedious').TYPES;
+const { TYPES: TDS_TYPES } = require('tedious');
 const TDS_TYPE_KEYS = Object.keys(TDS_TYPES);
 const UnicodeRegEx = /[^\u0000-\u00ff]/;
 const GUIDRegEx = /^[{(]?[0-9A-F]{8}[-]?(?:[0-9A-F]{4}[-]?){3}[0-9A-F]{12}[)}]?$/i;
@@ -40,6 +40,8 @@ class Query {
         this.params = new Map();
 
         this.exec = false;
+
+        this.requestTimeout = null;
 
     }
 
@@ -103,6 +105,20 @@ class Query {
             return Query.AUTODETECT_TYPES.DATETIME;
         }
         throw new Error('Unable to determine TDS type from the specified "value" parameter argument.');
+    }
+
+    /**
+     * Sets the SQL query request timeout.
+     * @throws Error if the `ms` argument less than 0 or not a number (or `null`).
+     * @param {Number} ms - The timeout in milliseconds, or `null` to use configured defaults.
+     * @returns {Query}
+     */
+    timeout(ms) {
+        if (ms !== null && (isNaN(ms) || ms < 0)) {
+            throw new Error('The parameter "ms" argument must be a positive number greater than or equal to zero (0) or null.');
+        }
+        this.requestTimeout = ms;
+        return this;
     }
 
     /**
