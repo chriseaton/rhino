@@ -83,6 +83,9 @@ db.destroy();
 ## Classes
 
 <dl>
+<dt><a href="#ConnectedQuery">ConnectedQuery</a></dt>
+<dd><p>Provides promise extensions to a <code>Query</code> object and allows it to be executed on an aquired connection.</p>
+</dd>
 <dt><a href="#Connection">Connection</a></dt>
 <dd><p>Provides access to the database through a TDS connection.</p>
 </dd>
@@ -108,6 +111,66 @@ configuration.</p>
 <dt><a href="#Transaction">Transaction</a></dt>
 <dd></dd>
 </dl>
+
+## Typedefs
+
+<dl>
+<dt><a href="#PromiseQuery">PromiseQuery</a> : <code><a href="#Query">Query</a></code> | <code>Promise.&lt;Result&gt;</code></dt>
+<dd></dd>
+</dl>
+
+<a name="ConnectedQuery"></a>
+
+## ConnectedQuery
+Provides promise extensions to a `Query` object and allows it to be executed on an aquired connection.
+
+**Kind**: global class  
+
+* [ConnectedQuery](#ConnectedQuery)
+    * [new ConnectedQuery(pool)](#new_ConnectedQuery_new)
+    * [.pool](#ConnectedQuery+pool) : <code>tarn.Pool</code>
+    * [.then([resolve], [reject])](#ConnectedQuery+then) ⇒ <code>Promise.&lt;Result&gt;</code>
+
+
+* * *
+
+<a name="new_ConnectedQuery_new"></a>
+
+### new ConnectedQuery(pool)
+Creates a new instance of a `ConnectedQuery`.
+
+
+| Param | Type | Description |
+| --- | --- | --- |
+| pool | <code>tarn.Pool</code> | The connection pool to utilize for aquiring the connection. |
+
+
+* * *
+
+<a name="ConnectedQuery+pool"></a>
+
+### connectedQuery.pool : <code>tarn.Pool</code>
+The `tarn.Pool` instance linked to this query.
+
+**Kind**: instance property of [<code>ConnectedQuery</code>](#ConnectedQuery)  
+
+* * *
+
+<a name="ConnectedQuery+then"></a>
+
+### connectedQuery.then([resolve], [reject]) ⇒ <code>Promise.&lt;Result&gt;</code>
+Thenable executor of this query using the linked connection or transaction.
+
+**Kind**: instance method of [<code>ConnectedQuery</code>](#ConnectedQuery)  
+**Throw**: Error if the `pool` property is falsey.  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| [resolve] | <code>function</code> | Promise callback called when the work completes successfully. |
+| [reject] | <code>function</code> | Promise callback called when the work fails. |
+
+
+* * *
 
 <a name="Connection"></a>
 
@@ -267,6 +330,12 @@ For more details, please refer to: [Tedious on GitHub](http://tediousjs.github.i
 | Name | Type | Default | Description |
 | --- | --- | --- | --- |
 | [server] | <code>String</code> | <code>&quot;localhost&quot;</code> | A default value is checked for under the `RHINO_MSSQL_HOST` then `RHINO_MSSQL_SERVER` environmental variables. |
+| [authentication] | <code>Object</code> |  |  |
+| [authentication.type] | <code>String</code> | <code>&quot;default&quot;</code> | A default value is checked for under the `RHINO_MSSQL_AUTH_TYPE` environmental variable. |
+| [authentication.options] | <code>Object</code> |  |  |
+| [authentication.options.userName] | <code>String</code> |  | A default value is checked for under the `RHINO_MSSQL_USER` then `RHINO_MSSQL_AUTH_USER` environmental variables. |
+| [authentication.options.password] | <code>String</code> |  | A default value is checked for under the `RHINO_MSSQL_PASSWORD` then `RHINO_MSSQL_AUTH_PASSWORD` environmental variables. |
+| [authentication.options.domain] | <code>String</code> |  | A default value is checked for under the `RHINO_MSSQL_DOMAIN` then `RHINO_MSSQL_AUTH_DOMAIN` environmental variables. |
 | [options] | <code>Object</code> |  |  |
 | [options.port] | <code>Number</code> | <code>1433</code> | A default value is checked for under the `RHINO_MSSQL_PORT` environmental variable. |
 | [options.instanceName] | <code>String</code> | <code></code> | A default value is checked for under the `RHINO_MSSQL_INSTANCE` then `RHINO_MSSQL_INSTANCE_NAME` environmental variables. |
@@ -277,18 +346,8 @@ For more details, please refer to: [Tedious on GitHub](http://tediousjs.github.i
 | [options.cancelTimeout] | <code>Number</code> | <code>5000</code> |  |
 | [options.connectionRetryInterval] | <code>Number</code> | <code>500</code> |  |
 | [options.encrypt] | <code>Boolean</code> | <code>false</code> | A default value is checked for under the `RHINO_MSSQL_ENCRYPT` environmental variable. |
-| [authentication] | <code>Object</code> |  |  |
-| [authentication.type] | <code>String</code> | <code>&quot;default&quot;</code> | A default value is checked for under the `RHINO_MSSQL_AUTH_TYPE` environmental variable. |
-| [authentication.options] | <code>Object</code> |  |  |
-| [authentication.options.userName] | <code>String</code> |  | A default value is checked for under the `RHINO_MSSQL_USER` then `RHINO_MSSQL_AUTH_USER` environmental variables. |
-| [authentication.options.password] | <code>String</code> |  | A default value is checked for under the `RHINO_MSSQL_PASSWORD` then `RHINO_MSSQL_AUTH_PASSWORD` environmental variables. |
-| [authentication.options.domain] | <code>String</code> |  | A default value is checked for under the `RHINO_MSSQL_DOMAIN` then `RHINO_MSSQL_AUTH_DOMAIN` environmental variables. |
 | [options.tdsVersion] | <code>String</code> | <code>&quot;7_4&quot;</code> |  |
 | [options.dateFormat] | <code>String</code> | <code>&quot;mdy&quot;</code> |  |
-| [options.debug.packet] | <code>Boolean</code> | <code>false</code> |  |
-| [options.debug.data] | <code>Boolean</code> | <code>false</code> |  |
-| [options.debug.payload] | <code>Boolean</code> | <code>false</code> |  |
-| [options.debug.token] | <code>Boolean</code> | <code>false</code> |  |
 | [options.fallbackToDefaultDb] | <code>Boolean</code> | <code>false</code> |  |
 | [options.enableAnsiNull] | <code>Boolean</code> | <code>true</code> |  |
 | [options.enableAnsiNullDefault] | <code>Boolean</code> | <code>true</code> |  |
@@ -312,6 +371,11 @@ For more details, please refer to: [Tedious on GitHub](http://tediousjs.github.i
 | [options.connectionIsolationLevel] | <code>String</code> | <code>&quot;READ_COMMITED&quot;</code> |  |
 | [options.readOnlyIntent] | <code>Boolean</code> | <code>false</code> |  |
 | [options.cryptoCredentialsDetails] | <code>Object</code> |  |  |
+| [options.debug] | <code>Object</code> |  |  |
+| [options.debug.packet] | <code>Boolean</code> | <code>false</code> |  |
+| [options.debug.data] | <code>Boolean</code> | <code>false</code> |  |
+| [options.debug.payload] | <code>Boolean</code> | <code>false</code> |  |
+| [options.debug.token] | <code>Boolean</code> | <code>false</code> |  |
 
 
 * * *
@@ -330,6 +394,7 @@ listeners added from other operations.
         * [.listeners](#EventTracker+listeners) : [<code>Array.&lt;RegisteredEventListener&gt;</code>](#EventTracker.RegisteredEventListener)
         * [.removeFrom(emitter, [event], [unregister])](#EventTracker+removeFrom)
         * [.register(event, ...listeners)](#EventTracker+register)
+        * [.registerOn(emitters, event, ...listeners)](#EventTracker+registerOn)
         * [.unregister([event], [...listeners])](#EventTracker+unregister)
     * _static_
         * [.RegisteredEventListener](#EventTracker.RegisteredEventListener)
@@ -379,6 +444,22 @@ Registers one or more event listeners.
 
 | Param | Type | Description |
 | --- | --- | --- |
+| event | <code>String</code> \| <code>Symbol</code> | The event name or symbol. |
+| ...listeners | <code>function</code> | The listener functions. |
+
+
+* * *
+
+<a name="EventTracker+registerOn"></a>
+
+### eventTracker.registerOn(emitters, event, ...listeners)
+Registers one or more event listeners in the tracker and on the specified target objects.
+
+**Kind**: instance method of [<code>EventTracker</code>](#EventTracker)  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| emitters | <code>EventEmitter</code> \| <code>Array.&lt;EventEmitter&gt;</code> | An `EventEmitter` instance or array of instances to  add the specified event listeners on using the `addListener` function call. |
 | event | <code>String</code> \| <code>Symbol</code> | The event name or symbol. |
 | ...listeners | <code>function</code> | The listener functions. |
 
@@ -496,6 +577,12 @@ Wraps a SQL query and provides helper functions for managing parameters.
 * [Query](#Query)
     * [new Query()](#new_Query_new)
     * _instance_
+        * [.statement](#Query+statement) : <code>String</code>
+        * [.params](#Query+params) : <code>Map.&lt;String, Query.Parameter&gt;</code>
+        * [.exec](#Query+exec) : <code>Boolean</code>
+        * [.batch](#Query+batch) : <code>Boolean</code>
+        * [.requestTimeout](#Query+requestTimeout) : <code>Number</code>
+        * [.timeout(ms)](#Query+timeout) ⇒ [<code>Query</code>](#Query)
         * [.sql(statement)](#Query+sql) ⇒ [<code>Query</code>](#Query)
         * [.in(name, [type], [value])](#Query+in) ⇒ [<code>Query</code>](#Query)
         * [.out(name, type)](#Query+out) ⇒ [<code>Query</code>](#Query)
@@ -505,9 +592,10 @@ Wraps a SQL query and provides helper functions for managing parameters.
         * [.TYPE](#Query.TYPE)
         * [.AUTODETECT_TYPES](#Query.AUTODETECT_TYPES)
             * [.FLOATING_POINT](#Query.AUTODETECT_TYPES.FLOATING_POINT)
-            * [.DATETIME](#Query.AUTODETECT_TYPES.DATETIME)
+            * [.DATE](#Query.AUTODETECT_TYPES.DATE)
             * [.BUFFER](#Query.AUTODETECT_TYPES.BUFFER)
         * [.TDSType](#Query.TDSType)
+        * [.Parameter](#Query.Parameter)
 
 
 * * *
@@ -532,6 +620,70 @@ q.remove('account');
 //reset everything
 q.clear();
 ```
+
+* * *
+
+<a name="Query+statement"></a>
+
+### query.statement : <code>String</code>
+The SQL statement.
+
+**Kind**: instance property of [<code>Query</code>](#Query)  
+
+* * *
+
+<a name="Query+params"></a>
+
+### query.params : <code>Map.&lt;String, Query.Parameter&gt;</code>
+The parameters and values to use on the query.
+
+**Kind**: instance property of [<code>Query</code>](#Query)  
+
+* * *
+
+<a name="Query+exec"></a>
+
+### query.exec : <code>Boolean</code>
+Flag indicating whether or not to treat this query as a command execution (such as calling a stored procedure).
+This is determined automatically based on the SQL statement.
+
+**Kind**: instance property of [<code>Query</code>](#Query)  
+
+* * *
+
+<a name="Query+batch"></a>
+
+### query.batch : <code>Boolean</code>
+Flag indicating whether or not this query should be executed like a batch query.
+
+**Kind**: instance property of [<code>Query</code>](#Query)  
+
+* * *
+
+<a name="Query+requestTimeout"></a>
+
+### query.requestTimeout : <code>Number</code>
+Command timeout value set for this query. A `null` value indicates the default will be used.
+
+**Kind**: instance property of [<code>Query</code>](#Query)  
+
+* * *
+
+<a name="Query+timeout"></a>
+
+### query.timeout(ms) ⇒ [<code>Query</code>](#Query)
+Sets the SQL query request timeout.
+
+**Kind**: instance method of [<code>Query</code>](#Query)  
+**Throws**:
+
+- Error if the `ms` argument less than 0 or not a number (or `null`).
+
+
+| Param | Type | Description |
+| --- | --- | --- |
+| ms | <code>Number</code> | The timeout in milliseconds, or `null` to use configured defaults. |
+
 
 * * *
 
@@ -648,7 +800,7 @@ value is provided. Only certain types can be configured.
 
 * [.AUTODETECT_TYPES](#Query.AUTODETECT_TYPES)
     * [.FLOATING_POINT](#Query.AUTODETECT_TYPES.FLOATING_POINT)
-    * [.DATETIME](#Query.AUTODETECT_TYPES.DATETIME)
+    * [.DATE](#Query.AUTODETECT_TYPES.DATE)
     * [.BUFFER](#Query.AUTODETECT_TYPES.BUFFER)
 
 
@@ -664,9 +816,9 @@ Defaults to `Float`.
 
 * * *
 
-<a name="Query.AUTODETECT_TYPES.DATETIME"></a>
+<a name="Query.AUTODETECT_TYPES.DATE"></a>
 
-#### AUTODETECT_TYPES.DATETIME
+#### AUTODETECT_TYPES.DATE
 The TDS type used when a Date object value is detected.
 Defaults to `DateTimeOffset`.
 
@@ -699,6 +851,25 @@ Defaults to `VarBinary`.
 
 * * *
 
+<a name="Query.Parameter"></a>
+
+### Query.Parameter
+**Kind**: static typedef of [<code>Query</code>](#Query)  
+**Properties**
+
+| Name | Type |
+| --- | --- |
+| output | <code>Boolean</code> | 
+| type | [<code>TDSType</code>](#Query.TDSType) | 
+| value | <code>\*</code> | 
+| options | <code>Object</code> | 
+| options.length | <code>Number</code> | 
+| options.precision | <code>Number</code> | 
+| options.scale | <code>Number</code> | 
+
+
+* * *
+
 <a name="Rhino"></a>
 
 ## Rhino
@@ -718,7 +889,7 @@ configuration.
         * [.log](#Rhino+log) : [<code>Log</code>](#Log)
         * [.destroy([done])](#Rhino+destroy)
         * [.ping()](#Rhino+ping) ⇒ <code>Boolean</code>
-        * [.query(sql)](#Rhino+query) ⇒ [<code>ConnectedQuery</code>](#new_ConnectedQuery_new)
+        * [.query(sql)](#Rhino+query) ⇒ [<code>ConnectedQuery</code>](#ConnectedQuery) \| <code>Promise.&lt;Result&gt;</code>
         * [.batch(sql)](#Rhino+batch)
     * _static_
         * [.create([config])](#Rhino.create) ⇒ [<code>Rhino</code>](#Rhino)
@@ -788,7 +959,7 @@ connection cannot be aquired for any reason.
 
 <a name="Rhino+query"></a>
 
-### rhino.query(sql) ⇒ [<code>ConnectedQuery</code>](#new_ConnectedQuery_new)
+### rhino.query(sql) ⇒ [<code>ConnectedQuery</code>](#ConnectedQuery) \| <code>Promise.&lt;Result&gt;</code>
 Runs a SQL statement on the database and returns the results.
 
 Note: This call is not meant to process batch statements. Use the `batch` function instead.
@@ -932,6 +1103,13 @@ Rhino's configuration fully implements all configuration properties from `tediou
 The rhino instance linked to this query.
 
 **Kind**: instance property of [<code>Transaction</code>](#Transaction)  
+
+* * *
+
+<a name="PromiseQuery"></a>
+
+## PromiseQuery : [<code>Query</code>](#Query) \| <code>Promise.&lt;Result&gt;</code>
+**Kind**: global typedef  
 
 * * *
 
