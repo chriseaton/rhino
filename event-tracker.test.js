@@ -92,6 +92,66 @@ describe('#register', () => {
     });
 });
 
+describe('#registerOn', () => {
+    test('throws on missing emitters parameter.', () => {
+        let et = new EventTracker();
+        expect(() => { et.registerOn(null, 'abc', () => { }); }).toThrow();
+        expect(() => { et.registerOn('', 'abc', () => { }); }).toThrow();
+        expect(() => { et.registerOn(0, 'abc', () => { }); }).toThrow();
+        expect(() => { et.register(); }).toThrow();
+    });
+    test('registers an event listener on an emitter.', () => {
+        let et = new EventTracker();
+        let ee = new EventEmitter();
+        let l1 = () => { };
+        et.registerOn(ee, 'test', l1);
+        expect(et.listeners.length).toBe(1);
+        expect(ee.listenerCount('test')).toBe(1);
+        expect(ee.listeners('test')[0]).toBe(l1);
+    });
+    test('registers multiple event listeners on an emitter.', () => {
+        let et = new EventTracker();
+        let ee = new EventEmitter();
+        let funcs = [];
+        for (let x = 0; x < 3; x++) {
+            funcs.push(() => { });
+        }
+        et.registerOn(ee, 'test', ...funcs);
+        expect(et.listeners.length).toBe(funcs.length);
+        expect(ee.listenerCount('test')).toBe(funcs.length);
+        for (let x = 0; x < funcs.length; x++) {
+            expect(ee.listeners('test')[x]).toBe(funcs[x]);
+        }
+    });
+    test('registers an event listener on multiple emitters.', () => {
+        let et = new EventTracker();
+        let ees = [new EventEmitter(), new EventEmitter(), new EventEmitter()];
+        let l1 = () => { };
+        et.registerOn(ees, 'test', l1);
+        expect(et.listeners.length).toBe(1);
+        for (let ee of ees) {
+            expect(ee.listenerCount('test')).toBe(1);
+            expect(ee.listeners('test')[0]).toBe(l1);
+        }
+    });
+    test('registers multiple event listeners on multiple emitters.', () => {
+        let et = new EventTracker();
+        let ees = [new EventEmitter(), new EventEmitter(), new EventEmitter()];
+        let funcs = [];
+        for (let x = 0; x < 3; x++) {
+            funcs.push(() => { });
+        }
+        et.registerOn(ees, 'test', ...funcs);
+        expect(et.listeners.length).toBe(funcs.length); 
+        for (let ee of ees) {
+            expect(ee.listenerCount('test')).toBe(funcs.length);
+            for (let x = 0; x < funcs.length; x++) {
+                expect(ee.listeners('test')[x]).toBe(funcs[x]);
+            }
+        }
+    });
+});
+
 describe('#unregister', () => {
     test('unregisters one.', () => {
         let et = new EventTracker();

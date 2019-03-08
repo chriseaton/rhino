@@ -3,6 +3,7 @@ const Log = require('./log.js');
 const Connection = require('./connection.js');
 const ConnectedQuery = require('./connected-query.js');
 const Transaction = require('./transaction.js');
+const Result = require('./result.js');
 
 require('dotenv').load();
 
@@ -184,7 +185,7 @@ class Rhino {
      * 
      * Note: This call is not meant to process batch statements. Use the `batch` function instead.
      * @param {String} sql - The SQL statement to execute.
-     * @returns {ConnectedQuery}
+     * @returns {ConnectedQuery|Promise.<Result>}
      */
     async query(sql) {
         return new ConnectedQuery(this._pool).sql(sql);

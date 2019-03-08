@@ -79,6 +79,29 @@ class EventTracker {
     }
 
     /**
+     * Registers one or more event listeners in the tracker and on the specified target objects.
+     * @param {EventEmitter|Array.<EventEmitter>} emitters - An `EventEmitter` instance or array of instances to 
+     * add the specified event listeners on using the `addListener` function call.
+     * @param {String|Symbol} event - The event name or symbol.
+     * @param {...Function} listeners - The listener functions.
+     */
+    registerOn(emitters, event, ...listeners) {
+        if (!emitters) {
+            throw new Error('The "emitters" parameter argument is required.');
+        }
+        this.register(event, ...listeners);
+        for (let l of listeners) {
+            if (Array.isArray(emitters)) {
+                for (let e of emitters) {
+                    e.addListener(event, l);
+                }
+            } else {
+                emitters.addListener(event, l);
+            }
+        }
+    }
+
+    /**
      * Un-registers one or more event listeners by matching the event and/or listener function(s). Either, both, or 
      * none of the parameters may be specified. If both event and listerner(s) are not specified, all listeners are
      * unregistered.

@@ -26,7 +26,7 @@
         "microsoft",
         "sql"
     ],
-    "author": "Christopher Eaton",
+    "author": "Christopher Eaton <chriseaton@live.com>",
     "license": "MIT",
     "bugs": {
         "url": "https://github.com/chriseaton/rhino/issues"

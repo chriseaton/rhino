@@ -11,6 +11,17 @@ const GUIDRegEx = /^[{(]?[0-9A-F]{8}[-]?(?:[0-9A-F]{4}[-]?){3}[0-9A-F]{12}[)}]?$
  */
 
 /**
+ * @typedef Query.Parameter
+ * @property {Boolean} output
+ * @property {Query.TDSType} type
+ * @property {*} value
+ * @property {Object} options
+ * @property {Number} options.length
+ * @property {Number} options.precision
+ * @property {Number} options.scale
+ */
+
+/**
  * Wraps a SQL query and provides helper functions for managing parameters.
  * 
  * @example
@@ -35,12 +46,35 @@ class Query {
      */
     constructor() {
 
+        /**
+         * The SQL statement.
+         * @type {String}
+         */
         this.statement = null;
 
+        /**
+         * The parameters and values to use on the query.
+         * @type {Map.<String, Query.Parameter>}
+         */
         this.params = new Map();
 
+        /**
+         * Flag indicating whether or not to treat this query as a command execution (such as calling a stored procedure).
+         * This is determined automatically based on the SQL statement.
+         * @type {Boolean}
+         */
         this.exec = false;
 
+        /**
+         * Flag indicating whether or not this query should be executed like a batch query.
+         * @type {Boolean}
+         */
+        this.batch = false;
+
+        /**
+         * Command timeout value set for this query. A `null` value indicates the default will be used.
+         * @type {Number}
+         */
         this.requestTimeout = null;
 
     }
@@ -102,7 +136,7 @@ class Query {
         } else if (Buffer.isBuffer(value)) {
             return Query.AUTODETECT_TYPES.BUFFER;
         } else if (value instanceof Date) {
-            return Query.AUTODETECT_TYPES.DATETIME;
+            return Query.AUTODETECT_TYPES.DATE;
         }
         throw new Error('Unable to determine TDS type from the specified "value" parameter argument.');
     }
@@ -262,7 +296,7 @@ Query.AUTODETECT_TYPES = {
      * The TDS type used when a Date object value is detected.
      * Defaults to `DateTimeOffset`.
      */
-    DATETIME: TDS_TYPES.DateTimeOffset,
+    DATE: TDS_TYPES.DateTimeOffset,
     /** 
      * The TDS type used when a Buffer object value is detected. 
      * Defaults to `VarBinary`.

@@ -11,6 +11,12 @@ const Log = require('./log.js');
  * For more details, please refer to: {@link http://tediousjs.github.io/tedious/api-connection.html#function_newConnection|Tedious on GitHub}
  * @typedef Connection.TediousConfiguration
  * @property {String} [server="localhost"] - A default value is checked for under the `RHINO_MSSQL_HOST` then `RHINO_MSSQL_SERVER` environmental variables.
+ * @property {Object} [authentication]
+ * @property {String} [authentication.type="default"] - A default value is checked for under the `RHINO_MSSQL_AUTH_TYPE` environmental variable.
+ * @property {Object} [authentication.options]
+ * @property {String} [authentication.options.userName] - A default value is checked for under the `RHINO_MSSQL_USER` then `RHINO_MSSQL_AUTH_USER` environmental variables.
+ * @property {String} [authentication.options.password] - A default value is checked for under the `RHINO_MSSQL_PASSWORD` then `RHINO_MSSQL_AUTH_PASSWORD` environmental variables.
+ * @property {String} [authentication.options.domain] - A default value is checked for under the `RHINO_MSSQL_DOMAIN` then `RHINO_MSSQL_AUTH_DOMAIN` environmental variables.
  * @property {Object} [options]
  * @property {Number} [options.port=1433] - A default value is checked for under the `RHINO_MSSQL_PORT` environmental variable.
  * @property {String} [options.instanceName=null] - A default value is checked for under the `RHINO_MSSQL_INSTANCE` then `RHINO_MSSQL_INSTANCE_NAME` environmental variables.
@@ -21,18 +27,8 @@ const Log = require('./log.js');
  * @property {Number} [options.cancelTimeout=5000]
  * @property {Number} [options.connectionRetryInterval=500]
  * @property {Boolean} [options.encrypt=false] - A default value is checked for under the `RHINO_MSSQL_ENCRYPT` environmental variable.
- * @property {Object} [authentication]
- * @property {String} [authentication.type="default"] - A default value is checked for under the `RHINO_MSSQL_AUTH_TYPE` environmental variable.
- * @property {Object} [authentication.options]
- * @property {String} [authentication.options.userName] - A default value is checked for under the `RHINO_MSSQL_USER` then `RHINO_MSSQL_AUTH_USER` environmental variables.
- * @property {String} [authentication.options.password] - A default value is checked for under the `RHINO_MSSQL_PASSWORD` then `RHINO_MSSQL_AUTH_PASSWORD` environmental variables.
- * @property {String} [authentication.options.domain] - A default value is checked for under the `RHINO_MSSQL_DOMAIN` then `RHINO_MSSQL_AUTH_DOMAIN` environmental variables.
  * @property {String} [options.tdsVersion="7_4"]
  * @property {String} [options.dateFormat="mdy"]
- * @property {Boolean} [options.debug.packet=false]
- * @property {Boolean} [options.debug.data=false]
- * @property {Boolean} [options.debug.payload=false]
- * @property {Boolean} [options.debug.token=false]
  * @property {Boolean} [options.fallbackToDefaultDb=false]
  * @property {Boolean} [options.enableAnsiNull=true]
  * @property {Boolean} [options.enableAnsiNullDefault=true]
@@ -56,6 +52,11 @@ const Log = require('./log.js');
  * @property {String} [options.connectionIsolationLevel="READ_COMMITED"]
  * @property {Boolean} [options.readOnlyIntent=false]
  * @property {Object} [options.cryptoCredentialsDetails]
+ * @property {Object} [options.debug]
+ * @property {Boolean} [options.debug.packet=false]
+ * @property {Boolean} [options.debug.data=false]
+ * @property {Boolean} [options.debug.payload=false]
+ * @property {Boolean} [options.debug.token=false]
  */
 
 /**
@@ -94,7 +95,7 @@ class Connection extends EventEmitter {
          * @type {Connection.TediousConfiguration}
          */
         this.config = tdsConfig;
-
+        
         /**
          * @type {Log}
          */
