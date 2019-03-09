@@ -187,7 +187,7 @@ class Rhino {
      * @param {String} sql - The SQL statement to execute.
      * @returns {ConnectedQuery|Promise.<Result>}
      */
-    async query(sql) {
+    query(sql) {
         return new ConnectedQuery(this._pool).sql(sql);
     }
 

@@ -37,7 +37,7 @@ describe('#query', () => {
     afterAll(() => {
         db.destroy();
     });
-    test('runs a simple select query returning row objects.', async () => {
+    test('runs a simple non-data select query returning row objects.', async () => {
         let db = rhino.create({
             options: {
                 useColumnNames: true
@@ -57,7 +57,7 @@ describe('#query', () => {
             db.destroy();
         }
     });
-    test('runs a simple select query returning row value arrays.', async () => {
+    test('runs a simple non-data select query returning row value arrays.', async () => {
         let r = await db.query('SELECT 1 AS A, \'hello\' AS B, \'world\' AS C;');
         expect(r).toBeTruthy();
         expect(r.columns.length).toBe(3);
@@ -66,7 +66,20 @@ describe('#query', () => {
         expect(r.rows[0][1]).toBe('hello');
         expect(r.rows[0][2]).toBe('world');
     });
-    test('runs a simple multi-statement select query.', async () => {
+    test('runs a simple non-data select using parameters.', async () => {
+        let r = await db
+            .query('SELECT @a AS A, @b AS B, @c AS C;')
+            .in('a', 1)
+            .in('b', 'hello')
+            .in('c', 'world');
+        expect(r).toBeTruthy();
+        expect(r.columns.length).toBe(3);
+        expect(r.rows.length).toBe(1);
+        expect(r.rows[0][0]).toBe(1);
+        expect(r.rows[0][1]).toBe('hello');
+        expect(r.rows[0][2]).toBe('world');
+    });
+    test('runs a simple non-data multi-statement select query.', async () => {
         let r = await db.query('SELECT 1 AS A, \'hello\' AS B, \'world\' AS C; SELECT 123; SELECT \'ABC\';');
         expect(Array.isArray(r)).toBeTruthy();
         expect(r.length).toBe(3);
@@ -81,5 +94,25 @@ describe('#query', () => {
         expect(r[2].columns.length).toBe(1);
         expect(r[2].rows.length).toBe(1);
         expect(r[2].rows[0][0]).toBe('ABC');
+    });
+    test('runs a simple non-data multi-statement select query with parameters.', async () => {
+        let r = await db
+            .query('SELECT @a AS A, @b AS B, @c AS C; SELECT 123; SELECT @b + @c;')
+            .in('a', 1)
+            .in('b', 'hello')
+            .in('c', 'world');
+        expect(Array.isArray(r)).toBeTruthy();
+        expect(r.length).toBe(3);
+        expect(r[0].columns.length).toBe(3);
+        expect(r[0].rows.length).toBe(1);
+        expect(r[0].rows[0][0]).toBe(1);
+        expect(r[0].rows[0][1]).toBe('hello');
+        expect(r[0].rows[0][2]).toBe('world');
+        expect(r[1].columns.length).toBe(1);
+        expect(r[1].rows.length).toBe(1);
+        expect(r[1].rows[0][0]).toBe(123);
+        expect(r[2].columns.length).toBe(1);
+        expect(r[2].rows.length).toBe(1);
+        expect(r[2].rows[0][0]).toBe('helloworld');
     });
 });
