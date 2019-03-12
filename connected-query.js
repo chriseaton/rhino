@@ -38,7 +38,7 @@ class ConnectedQuery extends Query {
      * @param {Function} [reject] - Promise callback called when the work fails.
      * @returns {Promise.<Result>}
      */
-    async then(resolve, reject) {
+    then(resolve, reject) {
         if (!this.pool) {
             if (reject) {
                 reject(new Error('The "pool" property is required.'));
@@ -46,16 +46,18 @@ class ConnectedQuery extends Query {
             return;
         }
         //execute the query directly on TDS connection.
-        try {
-            let conn = await this.pool.acquire().promise;
-            let r = await this._executeRequest(conn);
-            resolve(r);
-            this.pool.release(conn);
-            return r;
-        } catch (err) {
-            reject(err);
-            throw err;
-        }
+        //note to self: avoid using async on thennables... it creates... oddities.
+        return this.pool.acquire().promise
+            .then((conn) => {
+                return this._executeRequest(conn)
+                    .finally(() => {
+                        if (conn) {
+                            this.pool.release(conn);
+                        }
+                    });
+            })
+            .then(resolve)
+            .catch(reject);
     }
 
     /**
@@ -136,7 +138,7 @@ class ConnectedQuery extends Query {
                 //only move to a new result if the last result was used - ignore if it was just an empty token.
                 if (res.returned !== null || res.columns.length || res.rows.length) {
                     context.results.push(new Result());
-                }                
+                }
             };
             let execDoneHandler = (rowCount, more, returnValue) => {
                 let res = context.results[context.results.length - 1];

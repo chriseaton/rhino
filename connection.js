@@ -251,11 +251,10 @@ class Connection extends EventEmitter {
                     reject(err);
                 }
             };
-            et.register('connect', connectHandler);
-            et.register('error', errorHandler);
-            conn.once('connect', connectHandler);
-            conn.once('error', errorHandler);
+            et.registerOn(conn, 'connect', connectHandler);
+            et.registerOn(conn, 'error', errorHandler);
         });
+        
     }
 
     /**

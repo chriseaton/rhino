@@ -52,7 +52,7 @@ class Rhino {
         /**
          * @type {Rhino.RhinoConfiguration}
          */
-        this.config = Object.assign(Rhino.defaultConfig(), config);
+        this.config = Rhino.defaultConfig(config);
 
         /**
          * @type {Log}
@@ -65,6 +65,7 @@ class Rhino {
          */
         this._pool = this._createPool(this.config.pool);
 
+        //start listening for process hangups
         this._handleProcessTermination();
     }
 
@@ -91,7 +92,9 @@ class Rhino {
      */
     destroy(done) {
         if (this._pool) {
+            let self = this;
             this._pool.destroy().then(() => {
+                let m = self;
                 if (done) {
                     done();
                 }
@@ -182,21 +185,11 @@ class Rhino {
 
     /**
      * Runs a SQL statement on the database and returns the results.
-     * 
-     * Note: This call is not meant to process batch statements. Use the `batch` function instead.
      * @param {String} sql - The SQL statement to execute.
      * @returns {ConnectedQuery|Promise.<Result>}
      */
     query(sql) {
         return new ConnectedQuery(this._pool).sql(sql);
-    }
-
-    /**
-     * 
-     * @param {String} sql 
-     */
-    async batch(sql) {
-        throw Error('Not implemented yet.');
     }
 
     /**
@@ -227,27 +220,21 @@ class Rhino {
     /**
      * Returns a default `RhinoConfiguration` object. Default values are first searched for in environmental variables
      * then, if not found, with hard-coded default values.
+     * @param {RhinoConfiguration} [config] - Optional configuration value overrides.
      * @returns {RhinoConfiguration}
      */
-    static defaultConfig() {
+    static defaultConfig(config) {
         let dc = {
             server: process.env.RHINO_MSSQL_HOST || process.env.RHINO_MSSQL_SERVER || 'localhost',
-            options: {
-                port: process.env.RHINO_MSSQL_PORT || 1433,
-                encrypt: process.env.RHINO_MSSQL_ENCRYPT || false,
-                connectionRetries: 3
-            },
-            authentication: {
-                type: process.env.RHINO_MSSQL_AUTH_TYPE || 'default',
-                options: {
-                    userName: process.env.RHINO_MSSQL_USER || process.env.RHINO_MSSQL_AUTH_USER || null,
-                    password: process.env.RHINO_MSSQL_PASSWORD || process.env.RHINO_MSSQL_AUTH_PASSWORD || null,
-                    domain: process.env.RHINO_MSSQL_DOMAIN || process.env.RHINO_MSSQL_AUTH_DOMAIN || null
-                }
-            },
-            logging: {
-                mode: (typeof process.env.RHINO_LOGGING !== 'undefined' ? process.env.RHINO_LOGGING : false)
-            }
+        };
+        if (config) {
+            dc = Object.assign(dc, config);
+        }
+        //build options
+        dc.options = {
+            port: process.env.RHINO_MSSQL_PORT || 1433,
+            encrypt: process.env.RHINO_MSSQL_ENCRYPT || false,
+            connectionRetries: 3
         };
         if (process.env.RHINO_MSSQL_INSTANCE || process.env.RHINO_MSSQL_INSTANCE_NAME) {
             dc.options.instanceName = process.env.RHINO_MSSQL_INSTANCE || process.env.RHINO_MSSQL_INSTANCE_NAME;
@@ -258,6 +245,29 @@ class Rhino {
         if (process.env.RHINO_MSSQL_APP_NAME) {
             dc.options.appName = process.env.RHINO_MSSQL_APP_NAME;
         }
+        if (config && config.options) {
+            dc.options = Object.assign(dc.options, config.options);
+        }
+        //build authentication
+        dc.authentication = {
+            type: process.env.RHINO_MSSQL_AUTH_TYPE || 'default',
+            options: {
+                userName: process.env.RHINO_MSSQL_USER || process.env.RHINO_MSSQL_AUTH_USER || null,
+                password: process.env.RHINO_MSSQL_PASSWORD || process.env.RHINO_MSSQL_AUTH_PASSWORD || null,
+                domain: process.env.RHINO_MSSQL_DOMAIN || process.env.RHINO_MSSQL_AUTH_DOMAIN || null
+            }
+        };
+        if (config && config.authentication) {
+            dc.authentication = Object.assign(dc.authentication, config.authentication);
+        }
+        //build logging
+        dc.logging = {
+            mode: (typeof process.env.RHINO_LOGGING !== 'undefined' ? process.env.RHINO_LOGGING : false)
+        };
+        if (config && config.logging) {
+            dc.logging = Object.assign(dc.logging, config.logging);
+        }
+        //done
         return dc;
     }
 
