@@ -5,25 +5,32 @@
 > !!New project - not ready yet!
 
 Rhino is a tough, production-focused Node.js Microsoft SQL Server driver that incorporates pooling and is powered by
-the [tedious](http://tediousjs.github.io/tedious/api-connection.html#function_newConnection) driver. 
+the [tedious](http://tediousjs.github.io/tedious/api-connection.html#function_newConnection) driver. It was built to 
+take the bullsh*t out of running database queries and let you, the developer, focus on just running some queries and 
+getting reliable, fast results back from the database server.
 
-Here's why Rhino is a solid choice:
-- Fully implemented JSdoc, tested with [VS Code](https://code.visualstudio.com/) auto-completion.
-- Purposefully uses very few dependencies.
-- Solid, modern, unit-tested implementation built for heavy production use. 
-- Employs async/await/Promise operations to keep your queries running quickly.
+Rhino is a solid choice because...
+- It fully implements JSdoc and is tested with [VS Code](https://code.visualstudio.com/) auto-completion.
+- A dependency list so small we can list it here: [tedious](https://github.com/tediousjs/tedious) and [tarn](https://github.com/Vincit/tarn.js).
+- It is a solid, modern, unit-tested implementation built for heavy production use. 
+- Employs async/await/Promise functions to let you work asynchronously.
 - Manages connections for you using an internal pool, stop worrying about connections and just build queries.
-- Open-source and accepting positive contributions.
+- Open-source and accepting pull requests.
 
 ## Installation
 
 ```sh
 npm i rhino --save
 ```
+*or*
+```sh
+yarn add rhino
+```
 
 ## Quick Start
 
 ```js
+// create the rhino pool.
 const rhino = require('rhino');
 
 ...
@@ -40,44 +47,60 @@ let db = await rhino.create({
         max: 10
     }
 });
-
-//simple query
+```
+```js
+// run a simple query
 let results = await db.query('SELECT * FROM dbo.People');
 console.log(`Count: ${results.count}`);
-console.log(results.rows);
-
-//constructed query
-results = await db.query(`SELECT @valid=IsCustomer 
-                          FROM contacts 
-                          WHERE name LIKE @firstName AND account = @number`)
-                            .input('firstName', 'John')
-                            .input('account', Query.TYPE.INT, 23494893)
-                            .output('valid', 'BIT');
+console.table(results.rows);
+```
+```js
+// run a parameterized query
+results = await db
+    .query(`SELECT @valid=IsCustomer 
+            FROM contacts 
+            WHERE name LIKE @firstName AND account = @number`)
+    .in('firstName', 'John')
+    .in('account', Query.TYPE.INT, 23494893)
+    .out('valid', 'BIT');
 console.log(`Count: ${results.count}`);
-console.log(results.rows);
-
+console.table(results.rows);
+```
+```js
+// run queries in a transaction
+let tx = db.transaction();
+try {
+    let results = await tx
+        .query('INSERT INTO dbo.People (Code, FullName) VALUES (434,\'John Bircham\')')
+        .query('INSERT INTO dbo.People (Code, FullName) VALUES (@code, @name)', { code: 322, name: 'Amy Smith' })
+        .query('DELETE FROM dbo.People WHERE Code = 341')
+        .commit();
+    console.log('Transaction committed.');
+} catch (err) {
+    if (tx) tx.rollback();
+    console.error('Transaction rolled back.', err);
+    throw;
+}
+```
+```js
 ...
-//all done, forever!
+// all done, forever!
+// clean up resources
 db.destroy(); 
 ```
 
-### Transactions
+# Feature list
+- [x] Query execution:
+  - [x] Basic singular SQL statements.
+  - [x] SQL statements with parameters.
+  - [x] Batch SQL queries (no parameters).
+  - [x] Batch SQL queries returning multiple result-sets.
+  - [x] Stored procedure execution with parameters.
+  - [x] Stored procedures returning multiple result-sets.
+- [ ] Transactions 
+- [ ] Streaming query results.
+- [ ] Streaming bulk load.
 
-```js
-    let tx = null;
-    try {
-        tx = await dbc.transaction();
-        let results = await tx
-            .query('INSERT INTO dbo.People (Code, FullName) VALUES (434,\'John Bircham\')')
-            .query('INSERT INTO dbo.People (Code, FullName) VALUES (@code, @name)', { code: 322, name: 'Amy Smith' })
-            .query('DELETE FROM dbo.People WHERE Code = 341')
-            .commit();
-        console.log('Transaction committed.');
-    } catch (err) {
-        if (tx) tx.rollback();
-        throw;
-    }
-```
 # API 
 
 ## Classes
@@ -579,16 +602,21 @@ Wraps a SQL query and provides helper functions for managing parameters.
     * _instance_
         * [.statement](#Query+statement) : <code>String</code>
         * [.params](#Query+params) : <code>Map.&lt;String, Query.Parameter&gt;</code>
-        * [.exec](#Query+exec) : <code>Boolean</code>
-        * [.batch](#Query+batch) : <code>Boolean</code>
+        * [.mode](#Query+mode)
         * [.requestTimeout](#Query+requestTimeout) : <code>Number</code>
         * [.timeout(ms)](#Query+timeout) ⇒ [<code>Query</code>](#Query)
         * [.sql(statement)](#Query+sql) ⇒ [<code>Query</code>](#Query)
+        * [.batch()](#Query+batch) ⇒ [<code>Query</code>](#Query)
+        * [.exec()](#Query+exec) ⇒ [<code>Query</code>](#Query)
         * [.in(name, [type], [value])](#Query+in) ⇒ [<code>Query</code>](#Query)
         * [.out(name, type)](#Query+out) ⇒ [<code>Query</code>](#Query)
         * [.remove(name)](#Query+remove) ⇒ <code>Boolean</code>
         * [.clear()](#Query+clear)
     * _static_
+        * [.MODE](#Query.MODE)
+            * [.QUERY](#Query.MODE.QUERY)
+            * [.BATCH](#Query.MODE.BATCH)
+            * [.EXEC](#Query.MODE.EXEC)
         * [.TYPE](#Query.TYPE)
         * [.AUTODETECT_TYPES](#Query.AUTODETECT_TYPES)
             * [.FLOATING_POINT](#Query.AUTODETECT_TYPES.FLOATING_POINT)
@@ -641,20 +669,10 @@ The parameters and values to use on the query.
 
 * * *
 
-<a name="Query+exec"></a>
+<a name="Query+mode"></a>
 
-### query.exec : <code>Boolean</code>
-Flag indicating whether or not to treat this query as a command execution (such as calling a stored procedure).
-This is determined automatically based on the SQL statement.
-
-**Kind**: instance property of [<code>Query</code>](#Query)  
-
-* * *
-
-<a name="Query+batch"></a>
-
-### query.batch : <code>Boolean</code>
-Flag indicating whether or not this query should be executed like a batch query.
+### query.mode
+The query execution mode.
 
 **Kind**: instance property of [<code>Query</code>](#Query)  
 
@@ -690,7 +708,8 @@ Sets the SQL query request timeout.
 <a name="Query+sql"></a>
 
 ### query.sql(statement) ⇒ [<code>Query</code>](#Query)
-Sets the SQL query text (statment).
+Sets the SQL query text (statment). Calling this function resets the query `mode` to an automatically determined
+value.
 
 **Kind**: instance method of [<code>Query</code>](#Query)  
 **Throws**:
@@ -706,10 +725,33 @@ Sets the SQL query text (statment).
 
 * * *
 
+<a name="Query+batch"></a>
+
+### query.batch() ⇒ [<code>Query</code>](#Query)
+Forces the query into BATCH `mode`.
+
+**Kind**: instance method of [<code>Query</code>](#Query)  
+**Throws**:
+
+- Error if the query contains parameters.
+
+
+* * *
+
+<a name="Query+exec"></a>
+
+### query.exec() ⇒ [<code>Query</code>](#Query)
+Forces the query into EXEC `mode`.
+
+**Kind**: instance method of [<code>Query</code>](#Query)  
+
+* * *
+
 <a name="Query+in"></a>
 
 ### query.in(name, [type], [value]) ⇒ [<code>Query</code>](#Query)
-Adds an input parameter to the query.
+Adds an input parameter to the query.    
+Calling this when the query `mode` is set to BATCH will reset the `mode` to QUERY.
 
 **Kind**: instance method of [<code>Query</code>](#Query)  
 **Throws**:
@@ -731,7 +773,8 @@ Adds an input parameter to the query.
 <a name="Query+out"></a>
 
 ### query.out(name, type) ⇒ [<code>Query</code>](#Query)
-Adds an output parameter to the query.
+Adds an output parameter to the query.    
+Calling this when the query `mode` is set to BATCH will reset the `mode` to QUERY.
 
 **Kind**: instance method of [<code>Query</code>](#Query)  
 **Throws**:
@@ -778,6 +821,50 @@ Clears all query criteria, including SQL statement values and parameters. The `Q
 to a blank slate.
 
 **Kind**: instance method of [<code>Query</code>](#Query)  
+
+* * *
+
+<a name="Query.MODE"></a>
+
+### Query.MODE
+The mode that determines how the query should be executed.
+
+**Kind**: static property of [<code>Query</code>](#Query)  
+
+* [.MODE](#Query.MODE)
+    * [.QUERY](#Query.MODE.QUERY)
+    * [.BATCH](#Query.MODE.BATCH)
+    * [.EXEC](#Query.MODE.EXEC)
+
+
+* * *
+
+<a name="Query.MODE.QUERY"></a>
+
+#### MODE.QUERY
+Indicates the query should be run using the `execSql` function. This is the most common mode that supports 
+parameters.
+
+**Kind**: static property of [<code>MODE</code>](#Query.MODE)  
+
+* * *
+
+<a name="Query.MODE.BATCH"></a>
+
+#### MODE.BATCH
+This mode indicates the query should run using the `execSqlBatch` function. This mode does not support
+parameters and is meant for multi-statement queries.
+
+**Kind**: static property of [<code>MODE</code>](#Query.MODE)  
+
+* * *
+
+<a name="Query.MODE.EXEC"></a>
+
+#### MODE.EXEC
+This mode indicates the query is a stored procedure call, and is executed using the `callProcedure` function.
+
+**Kind**: static property of [<code>MODE</code>](#Query.MODE)  
 
 * * *
 
@@ -890,10 +977,9 @@ configuration.
         * [.destroy([done])](#Rhino+destroy)
         * [.ping()](#Rhino+ping) ⇒ <code>Boolean</code>
         * [.query(sql)](#Rhino+query) ⇒ [<code>ConnectedQuery</code>](#ConnectedQuery) \| <code>Promise.&lt;Result&gt;</code>
-        * [.batch(sql)](#Rhino+batch)
     * _static_
         * [.create([config])](#Rhino.create) ⇒ [<code>Rhino</code>](#Rhino)
-        * [.defaultConfig()](#Rhino.defaultConfig) ⇒ <code>RhinoConfiguration</code>
+        * [.defaultConfig([config])](#Rhino.defaultConfig) ⇒ <code>RhinoConfiguration</code>
         * [.PoolConfiguration](#Rhino.PoolConfiguration)
         * [.RhinoBaseConfiguration](#Rhino.RhinoBaseConfiguration)
         * [.RhinoConfiguration](#Rhino.RhinoConfiguration) : [<code>TediousConfiguration</code>](#Connection.TediousConfiguration) \| [<code>RhinoBaseConfiguration</code>](#Rhino.RhinoBaseConfiguration)
@@ -962,25 +1048,11 @@ connection cannot be aquired for any reason.
 ### rhino.query(sql) ⇒ [<code>ConnectedQuery</code>](#ConnectedQuery) \| <code>Promise.&lt;Result&gt;</code>
 Runs a SQL statement on the database and returns the results.
 
-Note: This call is not meant to process batch statements. Use the `batch` function instead.
-
 **Kind**: instance method of [<code>Rhino</code>](#Rhino)  
 
 | Param | Type | Description |
 | --- | --- | --- |
 | sql | <code>String</code> | The SQL statement to execute. |
-
-
-* * *
-
-<a name="Rhino+batch"></a>
-
-### rhino.batch(sql)
-**Kind**: instance method of [<code>Rhino</code>](#Rhino)  
-
-| Param | Type |
-| --- | --- |
-| sql | <code>String</code> | 
 
 
 * * *
@@ -1017,11 +1089,16 @@ let pool2 = rhino.create({
 
 <a name="Rhino.defaultConfig"></a>
 
-### Rhino.defaultConfig() ⇒ <code>RhinoConfiguration</code>
+### Rhino.defaultConfig([config]) ⇒ <code>RhinoConfiguration</code>
 Returns a default `RhinoConfiguration` object. Default values are first searched for in environmental variables
 then, if not found, with hard-coded default values.
 
 **Kind**: static method of [<code>Rhino</code>](#Rhino)  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| [config] | <code>RhinoConfiguration</code> | Optional configuration value overrides. |
+
 
 * * *
 
@@ -1143,6 +1220,7 @@ Configure a `.env` file in the root project folder and define the variables for 
 RHINO_MSSQL_HOST = localhost
 RHINO_MSSQL_USER = sa
 RHINO_MSSQL_PASSWORD = YourStr0ng_PasswordHERE
+RHINO_MSSQL_DATABASE = Rhino_Test
 ```
 
 ### 4. Run tests.

@@ -5,25 +5,32 @@
 > !!New project - not ready yet!
 
 Rhino is a tough, production-focused Node.js Microsoft SQL Server driver that incorporates pooling and is powered by
-the [tedious](http://tediousjs.github.io/tedious/api-connection.html#function_newConnection) driver. 
+the [tedious](http://tediousjs.github.io/tedious/api-connection.html#function_newConnection) driver. It was built to 
+take the bullsh*t out of running database queries and let you, the developer, focus on just running some queries and 
+getting reliable, fast results back from the database server.
 
-Here's why Rhino is a solid choice:
-- Fully implemented JSdoc, tested with [VS Code](https://code.visualstudio.com/) auto-completion.
-- Purposefully uses very few dependencies.
-- Solid, modern, unit-tested implementation built for heavy production use. 
-- Employs async/await/Promise operations to keep your queries running quickly.
+Rhino is a solid choice because...
+- It fully implements JSdoc and is tested with [VS Code](https://code.visualstudio.com/) auto-completion.
+- A dependency list so small we can list it here: [tedious](https://github.com/tediousjs/tedious) and [tarn](https://github.com/Vincit/tarn.js).
+- It is a solid, modern, unit-tested implementation built for heavy production use. 
+- Employs async/await/Promise functions to let you work asynchronously.
 - Manages connections for you using an internal pool, stop worrying about connections and just build queries.
-- Open-source and accepting positive contributions.
+- Open-source and accepting pull requests.
 
 ## Installation
 
 ```sh
 npm i rhino --save
 ```
+*or*
+```sh
+yarn add rhino
+```
 
 ## Quick Start
 
 ```js
+// create the rhino pool.
 const rhino = require('rhino');
 
 ...
@@ -40,44 +47,60 @@ let db = await rhino.create({
         max: 10
     }
 });
-
-//simple query
+```
+```js
+// run a simple query
 let results = await db.query('SELECT * FROM dbo.People');
 console.log(`Count: ${results.count}`);
-console.log(results.rows);
-
-//constructed query
-results = await db.query(`SELECT @valid=IsCustomer 
-                          FROM contacts 
-                          WHERE name LIKE @firstName AND account = @number`)
-                            .input('firstName', 'John')
-                            .input('account', Query.TYPE.INT, 23494893)
-                            .output('valid', 'BIT');
+console.table(results.rows);
+```
+```js
+// run a parameterized query
+results = await db
+    .query(`SELECT @valid=IsCustomer 
+            FROM contacts 
+            WHERE name LIKE @firstName AND account = @number`)
+    .in('firstName', 'John')
+    .in('account', Query.TYPE.INT, 23494893)
+    .out('valid', 'BIT');
 console.log(`Count: ${results.count}`);
-console.log(results.rows);
-
+console.table(results.rows);
+```
+```js
+// run queries in a transaction
+let tx = db.transaction();
+try {
+    let results = await tx
+        .query('INSERT INTO dbo.People (Code, FullName) VALUES (434,\'John Bircham\')')
+        .query('INSERT INTO dbo.People (Code, FullName) VALUES (@code, @name)', { code: 322, name: 'Amy Smith' })
+        .query('DELETE FROM dbo.People WHERE Code = 341')
+        .commit();
+    console.log('Transaction committed.');
+} catch (err) {
+    if (tx) tx.rollback();
+    console.error('Transaction rolled back.', err);
+    throw;
+}
+```
+```js
 ...
-//all done, forever!
+// all done, forever!
+// clean up resources
 db.destroy(); 
 ```
 
-### Transactions
+# Feature list
+- [x] Query execution:
+  - [x] Basic singular SQL statements.
+  - [x] SQL statements with parameters.
+  - [x] Batch SQL queries (no parameters).
+  - [x] Batch SQL queries returning multiple result-sets.
+  - [x] Stored procedure execution with parameters.
+  - [x] Stored procedures returning multiple result-sets.
+- [ ] Transactions 
+- [ ] Streaming query results.
+- [ ] Streaming bulk load.
 
-```js
-    let tx = null;
-    try {
-        tx = await dbc.transaction();
-        let results = await tx
-            .query('INSERT INTO dbo.People (Code, FullName) VALUES (434,\'John Bircham\')')
-            .query('INSERT INTO dbo.People (Code, FullName) VALUES (@code, @name)', { code: 322, name: 'Amy Smith' })
-            .query('DELETE FROM dbo.People WHERE Code = 341')
-            .commit();
-        console.log('Transaction committed.');
-    } catch (err) {
-        if (tx) tx.rollback();
-        throw;
-    }
-```
 # API 
 
 {{>main}}
@@ -111,6 +134,7 @@ Configure a `.env` file in the root project folder and define the variables for 
 RHINO_MSSQL_HOST = localhost
 RHINO_MSSQL_USER = sa
 RHINO_MSSQL_PASSWORD = YourStr0ng_PasswordHERE
+RHINO_MSSQL_DATABASE = Rhino_Test
 ```
 
 ### 4. Run tests.
