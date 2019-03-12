@@ -1,4 +1,5 @@
 const rhino = require('./rhino.js');
+const Query = require('./query.js');
 const fs = require('fs');
 const path = require('path');
 require('jest');
@@ -150,13 +151,15 @@ describe('#query', () => {
         afterAll(() => {
             db.destroy();
         });
-        test.only('bulk-loads a large script from memory.', async () => {
+        test('bulk-loads a large script from memory.', async () => {
             let data = fs.readFileSync(path.resolve(__dirname, 'test/bulk-load.sql'));
-            let r = await db.query(data.toString('utf8'));
+            let q = db.query(data.toString('utf8'));
+            expect(q.mode).toBe(Query.MODE.BATCH);
+            let r = await q;
             expect(r).toBeTruthy();
-            r = await db.query('SELECT COUNT(*) FROM Themes;');
+            r = await db.query('SELECT COUNT(*) FROM Theme;');
             expect(r.rows.length).toBe(1);
-            expect(r.rows[0][0]).toBe(33);
+            expect(r.rows[0][0]).toBe(100);
         });
     });
 });

@@ -59,17 +59,9 @@ class Query {
         this.params = new Map();
 
         /**
-         * Flag indicating whether or not to treat this query as a command execution (such as calling a stored procedure).
-         * This is determined automatically based on the SQL statement.
-         * @type {Boolean}
+         * The query execution mode.
          */
-        this.exec = false;
-
-        /**
-         * Flag indicating whether or not this query should be executed like a batch query.
-         * @type {Boolean}
-         */
-        this.batch = false;
+        this.mode = Query.MODE.QUERY;
 
         /**
          * Command timeout value set for this query. A `null` value indicates the default will be used.
@@ -156,7 +148,8 @@ class Query {
     }
 
     /**
-     * Sets the SQL query text (statment).
+     * Sets the SQL query text (statment). Calling this function resets the query `mode` to an automatically determined
+     * value. 
      * @throws Error if the `statement` argument is falsey.
      * @throws Error if the `statement` argument is not a string.
      * @param {String} statement - The SQL query text to be executed.
@@ -167,15 +160,43 @@ class Query {
             throw new Error('The parameter "statement" argument is required.');
         } else if (typeof statement != 'string') {
             throw new Error('The parameter "statement" argument must be a string type.');
-        } else if (statement) {
-            this.exec = !!statement.match(/^[\s;]*EXEC/i);
+        }
+        if (statement.match(/^[\s;]*EXEC/i)) {
+            this.mode = Query.MODE.EXEC;
+        } else if (this.params.size === 0 && !!statement.match(/([^"']|"|'[^"']*["'])*?(;|\s\bGO\b)\s*\S/)) {
+            this.mode = Query.MODE.BATCH;
+        } else {
+            this.mode = Query.MODE.QUERY;
         }
         this.statement = statement;
         return this;
     }
 
     /**
-     * Adds an input parameter to the query.
+     * Forces the query into BATCH `mode`. 
+     * @throws Error if the query contains parameters.
+     * @returns {Query}
+     */
+    batch() {
+        if (this.params.size > 0) {
+            throw new Error(`The query cannot be set to BATCH mode when query parameters are present: ${this.params.size} parameters were declared.`);
+        }
+        this.mode = Query.MODE.BATCH;
+        return this;
+    }
+
+    /**
+     * Forces the query into EXEC `mode`.
+     * @returns {Query}
+     */
+    exec() {
+        this.mode = Query.MODE.EXEC;
+        return this;
+    }
+
+    /**
+     * Adds an input parameter to the query.    
+     * Calling this when the query `mode` is set to BATCH will reset the `mode` to QUERY.
      * @throws Error if the `name` argument is falsey.
      * @throws Error if the `name` argument is not a string.
      * @throws Error if the `name` argument has already been specified or is not specified as a string.
@@ -207,6 +228,10 @@ class Query {
         if (typeof value === 'undefined') {
             value = null;
         }
+        //reset mode if necessary 
+        if (this.mode === Query.MODE.BATCH) {
+            this.mode = Query.MODE.QUERY;
+        }
         //add the parameter
         this.params.set(name, {
             output: false,
@@ -217,7 +242,8 @@ class Query {
     }
 
     /**
-     * Adds an output parameter to the query.
+     * Adds an output parameter to the query.    
+     * Calling this when the query `mode` is set to BATCH will reset the `mode` to QUERY.
      * @throws Error if the `name` argument is falsey.
      * @throws Error if the `name` argument is not a string.
      * @throws Error if the `name` argument has already been specified or is not specified as a string.
@@ -241,6 +267,11 @@ class Query {
         } else if (!type) {
             throw new Error('A parameter "type" argument is required.');
         }
+        //reset mode if necessary 
+        if (this.mode === Query.MODE.BATCH) {
+            this.mode = Query.MODE.QUERY;
+        }
+        //add the parameter
         this.params.set(name, {
             output: true,
             type: this._getTDSType(type)
@@ -271,11 +302,31 @@ class Query {
      */
     clear() {
         this.statement = null;
-        this.exec = false;
+        this.mode = Query.MODE.QUERY;
         this.params.clear();
     }
 
 }
+
+/**
+ * The mode that determines how the query should be executed.
+ */
+Query.MODE = {
+    /** 
+     * Indicates the query should be run using the `execSql` function. This is the most common mode that supports 
+     * parameters.
+     */
+    QUERY: 0,
+    /**
+     * This mode indicates the query should run using the `execSqlBatch` function. This mode does not support
+     * parameters and is meant for multi-statement queries.
+     */
+    BATCH: 1,
+    /**
+     * This mode indicates the query is a stored procedure call, and is executed using the `callProcedure` function.
+     */
+    EXEC: 2
+};
 
 /**
  * TDS column types.

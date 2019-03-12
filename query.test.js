@@ -24,18 +24,22 @@ describe('#sql', () => {
         q.sql('SELECT 2');
         expect(q.statement).toBe('SELECT 2');
     });
-    test('sets the query exec flag property', () => {
+    test('sets the query mode property', () => {
         let q = new Query();
         q.sql('SELECT 1');
-        expect(q.exec).toBe(false);
+        expect(q.mode).toBe(Query.MODE.QUERY);
         q.sql('EXEC dbo.sp_SomeSproc;');
-        expect(q.exec).toBe(true);
+        expect(q.mode).toBe(Query.MODE.EXEC);
         q.sql('UPDATE dbo.tbl1 SET id = 1;');
-        expect(q.exec).toBe(false);
+        expect(q.mode).toBe(Query.MODE.QUERY);
         q.sql('ExeCute dbo.MoreSprocs;');
-        expect(q.exec).toBe(true);
+        expect(q.mode).toBe(Query.MODE.EXEC);
         q.sql('\t ;ExeCute dbo.MoreSprocs;');
-        expect(q.exec).toBe(true);
+        expect(q.mode).toBe(Query.MODE.EXEC);
+        q.sql('\tUPDATE dbo.tbl1 SET id = 1 ;ExeCute dbo.MoreSprocs;');
+        expect(q.mode).toBe(Query.MODE.BATCH);
+        q.sql('SELECT 1\nGO\nSELECT 2');
+        expect(q.mode).toBe(Query.MODE.BATCH);
     });
     test('returns the Query instance.', () => {
         let c = new Query();
@@ -201,7 +205,7 @@ describe('#clear', () => {
         q.out('outTest', 'VARCHAR');
         q.clear();
         expect(q.statement).toBeNull();
-        expect(q.exec).toBe(false);
+        expect(q.mode).toBe(Query.MODE.QUERY);
         expect(q.params.size).toBe(0);
     });
 });

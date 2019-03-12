@@ -147,7 +147,7 @@ class ConnectedQuery extends Query {
                     context.results.push(new Result());
                 } else {
                     //check if running non-exec query, and if so, discard the last empty result
-                    if (!self.exec && !res.columns.length && !res.rows.length) {
+                    if (self.mode !== Query.MODE.EXEC && !res.columns.length && !res.rows.length) {
                         context.results.splice(context.results.length - 1, 1);
                     }
                 }
@@ -168,10 +168,10 @@ class ConnectedQuery extends Query {
             context.tracker.registerOn(context.req, 'doneProc', execDoneHandler);
             context.tracker.registerOn(context.req, 'requestCompleted', completeHandler);
             //make the call
-            if (self.exec && !self.batch) {
+            if (self.mode === Query.MODE.EXEC) {
                 //looks like a singular exec statement.
                 conn._tdsConnection.callProcedure(context.req);
-            } else if (self.batch && self.params.size === 0) {
+            } else if (self.mode === Query.MODE.BATCH && self.params.size === 0) {
                 //batch query without params.
                 conn._tdsConnection.execSqlBatch(context.req);
             } else {
