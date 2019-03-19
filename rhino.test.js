@@ -138,6 +138,30 @@ describe('#query', () => {
             expect(r.rows[0][0]).toBe(1);
             db.destroy();
         });
+        test('pool releases resources that are unused.', async () => {
+            let db = rhino.create({
+                options: {
+                    useColumnNames: false
+                }
+            });
+            await db.query('SELECT 1 AS A, \'hello\' AS B, \'world\' AS C;');
+            try {
+                await db.query('SELECTINVALID X*$)323');
+            } catch (err) {
+                expect(err).toBeTruthy();
+            }
+            for (let x = 0; x < 50; x++) {
+                await Promise.all([
+                    db.query('SELECT 1'),
+                    db.query('SELECT 2'),
+                    db.query('SELECT 3'),
+                    db.query('SELECT 4')
+                ]);
+                await db.query('SELECT 123');
+            }
+            expect(db._pool.free.length).toBeLessThanOrEqual(4);
+            db.destroy();
+        });
     });
     describe('bulk-load', () => {
         let db = null;

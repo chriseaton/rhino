@@ -1,23 +1,30 @@
-const Connection = require('./connection.js');
+const ConnectedQuery = require('./connected-query.js');
+const Query = require('./query.js');
 
 class Transaction {
     /**
-     * 
-     * @param {Connection} conn - The connection used by the transaction.
+     * Creates a new instance of a `Transaction`. 
+     * @param {tarn.Pool} pool - The connection pool to utilize for aquiring the connection.
      */
-    constructor(conn) {
+    constructor(pool) {
         //validate
-        if (!conn) {
-            throw new Error('The parameter "conn" argument is required.');
+        if (!pool) {
+            throw new Error('The parameter "pool" argument is required.');
         }
 
         /**
-         * The rhino instance linked to this query.
-         * @type {Rhino}
+         * The `tarn.Pool` instance linked to this query.
+         * @type {tarn.Pool}
          */
-        this.rhino = null;
+        this.pool = pool;
 
+        /**
+         * @type {Array.<Query>}
+         */
+        this.queries = [];
     }
+
+    
 }
 
 module.exports = Transaction;
