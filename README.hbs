@@ -2,8 +2,6 @@
 
 # Rhino
 
-> !!New project - not ready yet!
-
 Rhino is a tough, production-focused Node.js Microsoft SQL Server driver that incorporates pooling and is powered by
 the [tedious](http://tediousjs.github.io/tedious/api-connection.html#function_newConnection) driver. It was built to 
 take the bullsh*t out of running database queries and let you, the developer, focus on just running some queries and 
@@ -68,18 +66,20 @@ console.table(results.rows);
 ```
 ```js
 // run queries in a transaction
-let tx = db.transaction();
+let tx = null;
 try {
-    let results = await tx
-        .query('INSERT INTO dbo.People (Code, FullName) VALUES (434,\'John Bircham\')')
-        .query('INSERT INTO dbo.People (Code, FullName) VALUES (@code, @name)', { code: 322, name: 'Amy Smith' })
-        .query('DELETE FROM dbo.People WHERE Code = 341')
-        .commit();
+    tx = db.transaction();
+    tx.query('INSERT INTO dbo.People (Code, FullName) VALUES (434,\'John Bircham\')');
+    tx.query('INSERT INTO dbo.People (Code, FullName) VALUES (@code, @name)', { code: 322, name: 'Amy Smith' });
+    tx.query('DELETE FROM dbo.People WHERE Code = 341');
+    let results = await tx.commit();
     console.log('Transaction committed.');
 } catch (err) {
-    if (tx) tx.rollback();
-    console.error('Transaction rolled back.', err);
-    throw;
+    if (tx) {
+        tx.rollback();
+        console.info('Transaction rolled back.');
+    }
+    throw err;
 }
 ```
 ```js
@@ -97,7 +97,8 @@ db.destroy();
   - [x] Batch SQL queries returning multiple result-sets.
   - [x] Stored procedure execution with parameters.
   - [x] Stored procedures returning multiple result-sets.
-- [ ] Transactions 
+- [ ] Single-Level Transactions 
+- [ ] Nested Transactions 
 - [ ] Streaming query results.
 - [ ] Streaming bulk load.
 

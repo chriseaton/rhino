@@ -2,8 +2,6 @@
 
 # Rhino
 
-> !!New project - not ready yet!
-
 Rhino is a tough, production-focused Node.js Microsoft SQL Server driver that incorporates pooling and is powered by
 the [tedious](http://tediousjs.github.io/tedious/api-connection.html#function_newConnection) driver. It was built to 
 take the bullsh*t out of running database queries and let you, the developer, focus on just running some queries and 
@@ -68,18 +66,20 @@ console.table(results.rows);
 ```
 ```js
 // run queries in a transaction
-let tx = db.transaction();
+let tx = null;
 try {
-    let results = await tx
-        .query('INSERT INTO dbo.People (Code, FullName) VALUES (434,\'John Bircham\')')
-        .query('INSERT INTO dbo.People (Code, FullName) VALUES (@code, @name)', { code: 322, name: 'Amy Smith' })
-        .query('DELETE FROM dbo.People WHERE Code = 341')
-        .commit();
+    tx = db.transaction();
+    tx.query('INSERT INTO dbo.People (Code, FullName) VALUES (434,\'John Bircham\')');
+    tx.query('INSERT INTO dbo.People (Code, FullName) VALUES (@code, @name)', { code: 322, name: 'Amy Smith' });
+    tx.query('DELETE FROM dbo.People WHERE Code = 341');
+    let results = await tx.commit();
     console.log('Transaction committed.');
 } catch (err) {
-    if (tx) tx.rollback();
-    console.error('Transaction rolled back.', err);
-    throw;
+    if (tx) {
+        tx.rollback();
+        console.info('Transaction rolled back.');
+    }
+    throw err;
 }
 ```
 ```js
@@ -97,7 +97,8 @@ db.destroy();
   - [x] Batch SQL queries returning multiple result-sets.
   - [x] Stored procedure execution with parameters.
   - [x] Stored procedures returning multiple result-sets.
-- [ ] Transactions 
+- [ ] Single-Level Transactions 
+- [ ] Nested Transactions 
 - [ ] Streaming query results.
 - [ ] Streaming bulk load.
 
@@ -1157,29 +1158,120 @@ Rhino's configuration fully implements all configuration properties from `tediou
 **Kind**: global class  
 
 * [Transaction](#Transaction)
-    * [new Transaction(conn)](#new_Transaction_new)
-    * [.rhino](#Transaction+rhino) : [<code>Rhino</code>](#Rhino)
+    * [new Transaction(pool)](#new_Transaction_new)
+    * [.pool](#Transaction+pool) : <code>tarn.Pool</code>
+    * [.queries](#Transaction+queries) : [<code>Array.&lt;Query&gt;</code>](#Query)
+    * [.query(sql)](#Transaction+query) ⇒ [<code>ConnectedQuery</code>](#ConnectedQuery) \| <code>Promise.&lt;Result&gt;</code>
+    * [.savePoint()](#Transaction+savePoint)
+    * [.clear()](#Transaction+clear)
+    * [.commit([txName], [isolation])](#Transaction+commit) ⇒ <code>Array.&lt;Result&gt;</code>
+    * [.rollback()](#Transaction+rollback)
 
 
 * * *
 
 <a name="new_Transaction_new"></a>
 
-### new Transaction(conn)
+### new Transaction(pool)
+Creates a new instance of a `Transaction`.
+
 
 | Param | Type | Description |
 | --- | --- | --- |
-| conn | [<code>Connection</code>](#Connection) | The connection used by the transaction. |
+| pool | <code>tarn.Pool</code> | The connection pool to utilize for aquiring the connection. |
 
 
 * * *
 
-<a name="Transaction+rhino"></a>
+<a name="Transaction+pool"></a>
 
-### transaction.rhino : [<code>Rhino</code>](#Rhino)
-The rhino instance linked to this query.
+### transaction.pool : <code>tarn.Pool</code>
+The `tarn.Pool` instance linked to this query.
 
 **Kind**: instance property of [<code>Transaction</code>](#Transaction)  
+
+* * *
+
+<a name="Transaction+queries"></a>
+
+### transaction.queries : [<code>Array.&lt;Query&gt;</code>](#Query)
+**Kind**: instance property of [<code>Transaction</code>](#Transaction)  
+
+* * *
+
+<a name="Transaction+query"></a>
+
+### transaction.query(sql) ⇒ [<code>ConnectedQuery</code>](#ConnectedQuery) \| <code>Promise.&lt;Result&gt;</code>
+Runs a SQL statement on the database and returns the results.
+
+**Kind**: instance method of [<code>Transaction</code>](#Transaction)  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| sql | <code>String</code> | The SQL statement to execute. |
+
+
+* * *
+
+<a name="Transaction+savePoint"></a>
+
+### transaction.savePoint()
+Add a save-point to the transaction. This will follow the previously added query.
+
+**Kind**: instance method of [<code>Transaction</code>](#Transaction)  
+**Throws**:
+
+- Error if no queries are present. A save-point should follow at least one query.
+
+
+* * *
+
+<a name="Transaction+clear"></a>
+
+### transaction.clear()
+Remove all queued queries from the transaction.
+
+**Kind**: instance method of [<code>Transaction</code>](#Transaction)  
+
+* * *
+
+<a name="Transaction+commit"></a>
+
+### transaction.commit([txName], [isolation]) ⇒ <code>Array.&lt;Result&gt;</code>
+Commits all queries in the transaction queue.
+
+**Kind**: instance method of [<code>Transaction</code>](#Transaction)  
+**Throws**:
+
+- Error if the `pool` property is falsey.
+- Error when a `txName` argument is not present and an `isolation` argument is specified.
+
+**See**
+
+- [Microsoft documentation on transaction isolation levels.](https://docs.microsoft.com/en-us/sql/t-sql/statements/set-transaction-isolation-level-transact-sql)
+- `Connection.TediousConfiguration.options.isolationLevel`
+- `Connection.TediousConfiguration.options.connectionIsolationLevel`
+
+
+| Param | Type | Description |
+| --- | --- | --- |
+| [txName] | <code>String</code> | = A name associated with the transaction - this is required when specifying an  `isolation` argument value. |
+| [isolation] | <code>tedious.ISOLATION\_LEVEL</code> \| <code>Number</code> \| <code>String</code> | The isolation level of the transaction. Values can be numbers or strings corresponding to the `Transaction.ISOLATION_LEVEL` enum. For example:   - READ_UNCOMMITTED - READ_COMMITTED - REPEATABLE_READ - SERIALIZABLE - SNAPSHOT Defaults to the connection's isolation level, which is *usually* "READ_COMMITED". |
+
+
+* * *
+
+<a name="Transaction+rollback"></a>
+
+### transaction.rollback()
+Rolls back the active transaction.
+
+**Kind**: instance method of [<code>Transaction</code>](#Transaction)  
+**Throws**:
+
+- Error if the `pool` property is falsey.
+- Error if there is no active transaction connection.
+
 
 * * *
 
