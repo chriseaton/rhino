@@ -187,3 +187,25 @@ describe('#query', () => {
         });
     });
 });
+
+describe('#transaction', () => {
+    describe('non-data selects', () => {
+        let db = null;
+        beforeAll(() => {
+            db = rhino.create({
+                options: {
+                    useColumnNames: false
+                }
+            });
+        });
+        afterAll(() => {
+            db.destroy();
+        });
+        test.only('runs a simple non-data multi-statement select query.', async () => {
+            let tx = db.transaction();
+            tx.query('SELECT 1 AS A, \'hello\' AS B, \'world\' AS C; SELECT 123; SELECT \'ABC\';');
+            let r = await tx.commit();
+            console.log(r);
+        });
+    });
+});

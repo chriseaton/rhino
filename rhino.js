@@ -179,8 +179,8 @@ class Rhino {
         return false;
     }
 
-    async transaction() {
-        return new Transaction(this);
+    transaction() {
+        return new Transaction(this._pool);
     }
 
     /**
