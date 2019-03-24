@@ -201,11 +201,25 @@ describe('#transaction', () => {
         afterAll(() => {
             db.destroy();
         });
-        test.only('runs a simple non-data multi-statement select query.', async () => {
+        test('runs a simple non-data multi-statement select queries.', async () => {
             let tx = db.transaction();
             tx.query('SELECT 1 AS A, \'hello\' AS B, \'world\' AS C; SELECT 123; SELECT \'ABC\';');
+            tx.query('SELECT TOP 1 * FROM dbo.Role;');
             let r = await tx.commit();
-            console.log(r);
+            expect(r.length).toBe(4);
+            expect(r[0].columns.length).toBe(3);
+            expect(r[0].rows.length).toBe(1);
+            expect(r[0].rows[0][0]).toBe(1);
+            expect(r[0].rows[0][1]).toBe('hello');
+            expect(r[0].rows[0][2]).toBe('world');
+            expect(r[1].columns.length).toBe(1);
+            expect(r[1].rows.length).toBe(1);
+            expect(r[1].rows[0][0]).toBe(123);
+            expect(r[2].columns.length).toBe(1);
+            expect(r[2].rows.length).toBe(1);
+            expect(r[2].rows[0][0]).toBe('ABC');
+            expect(r[3].rows[0][0]).toBe(1);
+            expect(r[3].rows[0][1]).toBe('Administrator');
         });
     });
 });

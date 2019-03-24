@@ -36,7 +36,7 @@ class ConnectedQuery extends Query {
      * @throw Error if the `pool` property is falsey.
      * @param {Function} [resolve] - Promise callback called when the work completes successfully.
      * @param {Function} [reject] - Promise callback called when the work fails.
-     * @returns {Promise.<Result>}
+     * @returns {Promise.<Result|Array.<Result>>}
      */
     then(resolve, reject) {
         if (!this.pool) {
@@ -47,9 +47,10 @@ class ConnectedQuery extends Query {
         }
         //execute the query directly on TDS connection.
         //note to self: avoid using async on thennables... it creates... oddities.
+        let q = this;
         return this.pool.acquire().promise
             .then((conn) => {
-                return this._executeRequest(conn)
+                return ConnectedQuery._executeRequest(q, conn)
                     .finally(() => {
                         if (conn) {
                             this.pool.release(conn);
@@ -61,13 +62,14 @@ class ConnectedQuery extends Query {
     }
 
     /**
-     * Converts the query to a TDS Request object for use with a TDS connection.
+     * Converts the query to a TDS Request object and executes it on the specified connection. A promise is returned
+     * that resolves when the TDS Request triggers completion (done) events. It will reject on any error.
+     * @param {Query} q - The query instance to execute on the connection.
      * @param {Connection} conn - The connection resource aquired from the pool.
      * @returns {Promise.<Result>}
      * @private
      */
-    async _executeRequest(conn) {
-        let self = this;
+    static async _executeRequest(q, conn) {
         return new Promise((resolve, reject) => {
             let context = {
                 useColumnNames: conn.config.options.useColumnNames,
@@ -76,7 +78,7 @@ class ConnectedQuery extends Query {
                 req: null
             };
             //build the request object with callback
-            context.req = new TDS_Request(self.statement, (err) => {
+            context.req = new TDS_Request(q.statement, (err) => {
                 if (err) {
                     if (conn.log) {
                         conn.log.error(err);
@@ -86,11 +88,11 @@ class ConnectedQuery extends Query {
                 }
             });
             //add timeout if specified
-            if (self.requestTimeout >= 0) {
-                context.req.setTimeout(self.requestTimeout);
+            if (q.requestTimeout >= 0) {
+                context.req.setTimeout(q.requestTimeout);
             }
             //add parameters
-            for (let [key, value] of self.params) {
+            for (let [key, value] of q.params) {
                 if (value.output) {
                     context.req.addOutputParameter(key, value.type, value.value, value.options);
                 } else {
@@ -147,7 +149,7 @@ class ConnectedQuery extends Query {
                     context.results.push(new Result());
                 } else {
                     //check if running non-exec query, and if so, discard the last empty result
-                    if (self.mode !== Query.MODE.EXEC && !res.columns.length && !res.rows.length) {
+                    if (q.mode !== Query.MODE.EXEC && !res.columns.length && !res.rows.length) {
                         context.results.splice(context.results.length - 1, 1);
                     }
                 }
@@ -168,10 +170,10 @@ class ConnectedQuery extends Query {
             context.tracker.registerOn(context.req, 'doneProc', execDoneHandler);
             context.tracker.registerOn(context.req, 'requestCompleted', completeHandler);
             //make the call
-            if (self.mode === Query.MODE.EXEC) {
+            if (q.mode === Query.MODE.EXEC) {
                 //looks like a singular exec statement.
                 conn._tdsConnection.callProcedure(context.req);
-            } else if (self.mode === Query.MODE.BATCH && self.params.size === 0) {
+            } else if (q.mode === Query.MODE.BATCH && q.params.size === 0) {
                 //batch query without params.
                 conn._tdsConnection.execSqlBatch(context.req);
             } else {
