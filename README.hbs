@@ -66,19 +66,16 @@ console.table(results.rows);
 ```
 ```js
 // run queries in a transaction
-let tx = null;
+let tx = db.transaction();
 try {
-    tx = db.transaction();
     tx.query('INSERT INTO dbo.People (Code, FullName) VALUES (434,\'John Bircham\')');
     tx.query('INSERT INTO dbo.People (Code, FullName) VALUES (@code, @name)', { code: 322, name: 'Amy Smith' });
     tx.query('DELETE FROM dbo.People WHERE Code = 341');
     let results = await tx.commit();
     console.log('Transaction committed.');
 } catch (err) {
-    if (tx) {
-        tx.rollback();
-        console.info('Transaction rolled back.');
-    }
+    tx.rollback();
+    console.info('Transaction rolled back.');
     throw err;
 }
 ```
@@ -91,14 +88,15 @@ db.destroy();
 
 # Feature list
 - [x] Query execution:
-  - [x] Basic singular SQL statements.
-  - [x] SQL statements with parameters.
-  - [x] Batch SQL queries (no parameters).
-  - [x] Batch SQL queries returning multiple result-sets.
-  - [x] Stored procedure execution with parameters.
-  - [x] Stored procedures returning multiple result-sets.
-- [ ] Single-Level Transactions 
-- [ ] Nested Transactions 
+  - [x] Basic singular SQL statements. [done v1]
+  - [x] SQL statements with parameters. [done v1]
+  - [ ] SQL statements using parameter (mapped) objects.
+  - [x] Batch SQL queries (no parameters). [done v1]
+  - [x] Batch SQL queries returning multiple result-sets. [done v1]
+  - [x] Stored procedure execution with parameters. [done v1]
+  - [x] Stored procedures returning multiple result-sets. [done v1]
+- [x] Single-Level transactions. [done v2]
+- [ ] Nested transactions. 
 - [ ] Streaming query results.
 - [ ] Streaming bulk load.
 
@@ -137,6 +135,8 @@ RHINO_MSSQL_USER = sa
 RHINO_MSSQL_PASSWORD = YourStr0ng_PasswordHERE
 RHINO_MSSQL_DATABASE = Rhino_Test
 ```
+
+You should repleace the `RHINO_MSSQL_PASSWORD` password with your own uniquely generated strong password.
 
 ### 4. Run tests.
 Now that the test database server is up and running, you can run the Rhino unit-tests:

@@ -66,19 +66,16 @@ console.table(results.rows);
 ```
 ```js
 // run queries in a transaction
-let tx = null;
+let tx = db.transaction();
 try {
-    tx = db.transaction();
     tx.query('INSERT INTO dbo.People (Code, FullName) VALUES (434,\'John Bircham\')');
     tx.query('INSERT INTO dbo.People (Code, FullName) VALUES (@code, @name)', { code: 322, name: 'Amy Smith' });
     tx.query('DELETE FROM dbo.People WHERE Code = 341');
     let results = await tx.commit();
     console.log('Transaction committed.');
 } catch (err) {
-    if (tx) {
-        tx.rollback();
-        console.info('Transaction rolled back.');
-    }
+    tx.rollback();
+    console.info('Transaction rolled back.');
     throw err;
 }
 ```
@@ -91,14 +88,15 @@ db.destroy();
 
 # Feature list
 - [x] Query execution:
-  - [x] Basic singular SQL statements.
-  - [x] SQL statements with parameters.
-  - [x] Batch SQL queries (no parameters).
-  - [x] Batch SQL queries returning multiple result-sets.
-  - [x] Stored procedure execution with parameters.
-  - [x] Stored procedures returning multiple result-sets.
-- [ ] Single-Level Transactions 
-- [ ] Nested Transactions 
+  - [x] Basic singular SQL statements. [done v1]
+  - [x] SQL statements with parameters. [done v1]
+  - [ ] SQL statements using parameter (mapped) objects.
+  - [x] Batch SQL queries (no parameters). [done v1]
+  - [x] Batch SQL queries returning multiple result-sets. [done v1]
+  - [x] Stored procedure execution with parameters. [done v1]
+  - [x] Stored procedures returning multiple result-sets. [done v1]
+- [x] Single-Level transactions. [done v2]
+- [ ] Nested transactions. 
 - [ ] Streaming query results.
 - [ ] Streaming bulk load.
 
@@ -153,7 +151,7 @@ Provides promise extensions to a `Query` object and allows it to be executed on 
 * [ConnectedQuery](#ConnectedQuery)
     * [new ConnectedQuery(pool)](#new_ConnectedQuery_new)
     * [.pool](#ConnectedQuery+pool) : <code>tarn.Pool</code>
-    * [.then([resolve], [reject])](#ConnectedQuery+then) ⇒ <code>Promise.&lt;Result&gt;</code>
+    * [.then([resolve], [reject])](#ConnectedQuery+then) ⇒ <code>Promise.&lt;(Result\|Array.&lt;Result&gt;)&gt;</code>
 
 
 * * *
@@ -182,7 +180,7 @@ The `tarn.Pool` instance linked to this query.
 
 <a name="ConnectedQuery+then"></a>
 
-### connectedQuery.then([resolve], [reject]) ⇒ <code>Promise.&lt;Result&gt;</code>
+### connectedQuery.then([resolve], [reject]) ⇒ <code>Promise.&lt;(Result\|Array.&lt;Result&gt;)&gt;</code>
 Thenable executor of this query using the linked connection or transaction.
 
 **Kind**: instance method of [<code>ConnectedQuery</code>](#ConnectedQuery)  
@@ -1161,11 +1159,12 @@ Rhino's configuration fully implements all configuration properties from `tediou
     * [new Transaction(pool)](#new_Transaction_new)
     * [.pool](#Transaction+pool) : <code>tarn.Pool</code>
     * [.queries](#Transaction+queries) : [<code>Array.&lt;Query&gt;</code>](#Query)
-    * [.query(sql)](#Transaction+query) ⇒ [<code>ConnectedQuery</code>](#ConnectedQuery) \| <code>Promise.&lt;Result&gt;</code>
+    * [.query(sql)](#Transaction+query) ⇒ [<code>Query</code>](#Query)
     * [.savePoint()](#Transaction+savePoint)
     * [.clear()](#Transaction+clear)
-    * [.commit([txName], [isolation])](#Transaction+commit) ⇒ <code>Array.&lt;Result&gt;</code>
+    * [.commit([txName], [isolation])](#Transaction+commit) ⇒ <code>Promise.&lt;(Result\|Array.&lt;Result&gt;)&gt;</code>
     * [.rollback()](#Transaction+rollback)
+    * [._releaseConnection()](#Transaction+_releaseConnection)
 
 
 * * *
@@ -1201,7 +1200,7 @@ The `tarn.Pool` instance linked to this query.
 
 <a name="Transaction+query"></a>
 
-### transaction.query(sql) ⇒ [<code>ConnectedQuery</code>](#ConnectedQuery) \| <code>Promise.&lt;Result&gt;</code>
+### transaction.query(sql) ⇒ [<code>Query</code>](#Query)
 Runs a SQL statement on the database and returns the results.
 
 **Kind**: instance method of [<code>Transaction</code>](#Transaction)  
@@ -1237,7 +1236,7 @@ Remove all queued queries from the transaction.
 
 <a name="Transaction+commit"></a>
 
-### transaction.commit([txName], [isolation]) ⇒ <code>Array.&lt;Result&gt;</code>
+### transaction.commit([txName], [isolation]) ⇒ <code>Promise.&lt;(Result\|Array.&lt;Result&gt;)&gt;</code>
 Commits all queries in the transaction queue.
 
 **Kind**: instance method of [<code>Transaction</code>](#Transaction)  
@@ -1245,6 +1244,7 @@ Commits all queries in the transaction queue.
 
 - Error if the `pool` property is falsey.
 - Error when a `txName` argument is not present and an `isolation` argument is specified.
+- Error if there is an active connection already processing a transaction.
 
 **See**
 
@@ -1271,7 +1271,17 @@ Rolls back the active transaction.
 
 - Error if the `pool` property is falsey.
 - Error if there is no active transaction connection.
+- Error if the active connection does not have an active transaction.
 
+
+* * *
+
+<a name="Transaction+_releaseConnection"></a>
+
+### transaction.\_releaseConnection()
+Releases the connection if it is attached. The connection is released back to the rhino pool.
+
+**Kind**: instance method of [<code>Transaction</code>](#Transaction)  
 
 * * *
 
@@ -1314,6 +1324,8 @@ RHINO_MSSQL_USER = sa
 RHINO_MSSQL_PASSWORD = YourStr0ng_PasswordHERE
 RHINO_MSSQL_DATABASE = Rhino_Test
 ```
+
+You should repleace the `RHINO_MSSQL_PASSWORD` password with your own uniquely generated strong password.
 
 ### 4. Run tests.
 Now that the test database server is up and running, you can run the Rhino unit-tests:
