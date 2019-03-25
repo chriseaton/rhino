@@ -46,6 +46,26 @@ describe('#sql', () => {
         expect(c.sql('EXEC sp_123')).toBe(c);
         expect(new Query().sql('SELECT 1')).toBeInstanceOf(Query);
     });
+    test('calling with @params object adds "in" parameters.', () => {
+        let q = new Query();
+        q.sql('SELECT @a, @b, @c;', { a: 1, b: 2, c: true });
+        expect(q.params.size).toBe(3);
+        expect(q.params.get('a').value).toBe(1);
+        expect(q.params.get('b').value).toBe(2);
+        expect(q.params.get('c').value).toBe(true);
+    });
+    test('calling with @params map adds "in" parameters.', () => {
+        let q = new Query();
+        let m = new Map();
+        m.set('a', 1);
+        m.set('b', 2);
+        m.set('c', true);
+        q.sql('SELECT @a, @b, @c;', m);
+        expect(q.params.size).toBe(3);
+        expect(q.params.get('a').value).toBe(1);
+        expect(q.params.get('b').value).toBe(2);
+        expect(q.params.get('c').value).toBe(true);
+    });
 });
 
 describe('#in', () => {
@@ -56,12 +76,11 @@ describe('#in', () => {
         expect(() => q.in(false)).toThrow(/name.+required/);
         expect(() => q.in(0)).toThrow(/name.+required/);
     });
-    test('throws when the @name is not a string.', () => {
+    test('throws when the @name a map without string keys.', () => {
         let q = new Query();
-        expect(() => q.in([])).toThrow(/name.+string/);
-        expect(() => q.in(new Date())).toThrow(/name.+string/);
-        expect(() => q.in(true)).toThrow(/name.+string/);
-        expect(() => q.in(1234)).toThrow(/name.+string/);
+        let m = new Map();
+        m.set(true, 123);
+        expect(() => q.out(m)).toThrow(/name.+string/);
     });
     test('throws when a param with the same @name has been added.', () => {
         let q = new Query();
@@ -75,8 +94,8 @@ describe('#in', () => {
     });
     test('detects proper auto-detectable types.', () => {
         let c = new Query();
-        expect(c.in('test1', null).params.get('test1').type).toBe(Query.TYPE.Null);
-        expect(c.in('test2').params.get('test2').type).toBe(Query.TYPE.Null);
+        expect(c.in('test1', null).params.get('test1').type).toBe(Query.TYPE.Int);
+        expect(c.in('test2').params.get('test2').type).toBe(Query.TYPE.Int);
         expect(c.in('test3', '').params.get('test3').type).toBe(Query.TYPE.VarChar);
         expect(c.in('test4', 'abc').params.get('test4').type).toBe(Query.TYPE.VarChar);
         expect(c.in('test5', '(╯°□°）╯︵ ┻━┻').params.get('test5').type).toBe(Query.TYPE.NVarChar);
@@ -110,6 +129,38 @@ describe('#in', () => {
     test('sets the proper output flag of false.', () => {
         expect(new Query().in('abc', 123).params.get('abc').output).toBe(false);
     });
+    test('adds multiple parameters by object.', () => {
+        let q = new Query();
+        q.in({ a: 1, b: 2, c: 3 }, Query.TYPE.BigInt);
+        expect(q.params.has('a')).toBeTruthy();
+        expect(q.params.get('a').type).toBe(Query.TYPE.BigInt);
+        expect(q.params.get('a').value).toBe(1);
+        expect(q.params.has('b')).toBeTruthy();
+        expect(q.params.get('b').type).toBe(Query.TYPE.BigInt);
+        expect(q.params.get('b').value).toBe(2);
+        expect(q.params.has('c')).toBeTruthy();
+        expect(q.params.get('c').type).toBe(Query.TYPE.BigInt);
+        expect(q.params.get('c').value).toBe(3);
+        expect(q.params.has('d')).toBeFalsy();
+    });
+    test('adds multiple parameters by Map.', () => {
+        let q = new Query();
+        let m = new Map();
+        m.set('a', 1);
+        m.set('b', 2);
+        m.set('c', 3);
+        q.in(m, Query.TYPE.BigInt);
+        expect(q.params.has('a')).toBeTruthy();
+        expect(q.params.get('a').type).toBe(Query.TYPE.BigInt);
+        expect(q.params.get('a').value).toBe(1);
+        expect(q.params.has('b')).toBeTruthy();
+        expect(q.params.get('b').type).toBe(Query.TYPE.BigInt);
+        expect(q.params.get('b').value).toBe(2);
+        expect(q.params.has('c')).toBeTruthy();
+        expect(q.params.get('c').type).toBe(Query.TYPE.BigInt);
+        expect(q.params.get('c').value).toBe(3);
+        expect(q.params.has('d')).toBeFalsy();
+    });
 });
 
 describe('#out', () => {
@@ -120,12 +171,11 @@ describe('#out', () => {
         expect(() => q.out(false)).toThrow(/name.+required/);
         expect(() => q.out(0)).toThrow(/name.+required/);
     });
-    test('throws when the @name is not a string.', () => {
+    test('throws when the @name a map without string keys.', () => {
         let q = new Query();
-        expect(() => q.out([])).toThrow(/name.+string/);
-        expect(() => q.out(new Date())).toThrow(/name.+string/);
-        expect(() => q.out(true)).toThrow(/name.+string/);
-        expect(() => q.out(1234)).toThrow(/name.+string/);
+        let m = new Map();
+        m.set(true, 123);
+        expect(() => q.out(m)).toThrow(/name.+string/);
     });
     test('throws when the @type is falsey.', () => {
         let q = new Query();
@@ -163,6 +213,26 @@ describe('#out', () => {
     test('sets the proper output flag of false.', () => {
         expect(new Query().out('abc', Query.TYPE.Int).params.get('abc').output).toBe(true);
     });
+    test('adds multiple parameters by object.', () => {
+        let q = new Query();
+        q.out({ a: 1, b: 2, c: 3 }, Query.TYPE.BigInt);
+        expect(q.params.has('a')).toBeTruthy();
+        expect(q.params.has('b')).toBeTruthy();
+        expect(q.params.has('c')).toBeTruthy();
+        expect(q.params.has('d')).toBeFalsy();
+    });
+    test('adds multiple parameters by Map.', () => {
+        let q = new Query();
+        let m = new Map();
+        m.set('a', 1);
+        m.set('b', 2);
+        m.set('c', 3);
+        q.out(m, Query.TYPE.BigInt);
+        expect(q.params.has('a')).toBeTruthy();
+        expect(q.params.has('b')).toBeTruthy();
+        expect(q.params.has('c')).toBeTruthy();
+        expect(q.params.has('d')).toBeFalsy();
+    });
 });
 
 describe('#remove', () => {
@@ -185,15 +255,15 @@ describe('#remove', () => {
     });
     test('throws when the @name is falsey.', () => {
         let q = new Query();
-        expect(()=>q.remove()).toThrow(/name.+required/);
-        expect(()=>q.remove(null)).toThrow(/name.+required/);
-        expect(()=>q.remove(false)).toThrow(/name.+required/);
+        expect(() => q.remove()).toThrow(/name.+required/);
+        expect(() => q.remove(null)).toThrow(/name.+required/);
+        expect(() => q.remove(false)).toThrow(/name.+required/);
     });
     test('throws when the @name is not a string.', () => {
         let q = new Query();
-        expect(()=>q.remove(true)).toThrow(/name.+string/);
-        expect(()=>q.remove(34324)).toThrow(/name.+string/);
-        expect(()=>q.remove(new Date())).toThrow(/name.+string/);
+        expect(() => q.remove(true)).toThrow(/name.+string/);
+        expect(() => q.remove(34324)).toThrow(/name.+string/);
+        expect(() => q.remove(new Date())).toThrow(/name.+string/);
     });
 });
 

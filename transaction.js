@@ -38,13 +38,16 @@ class Transaction {
     /**
      * Runs a SQL statement on the database and returns the results.
      * @param {String} sql - The SQL statement to execute.
+     * @param {Map.<String,*>|Object} [params] - Optional parameters `Object` or `Map` that will be added to the
+     * "in" parameters of the query. Keys and property names are used as the parameter name, and the value as the 
+     * parameter values.
      * @returns {Query}
      */
-    query(sql) {
+    query(sql, params) {
         if (!this.queries) {
             this.queries = [];
         }
-        let q = new Query().sql(sql);
+        let q = new Query().sql(sql, params);
         this.queries.push(q);
         return q;
     }

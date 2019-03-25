@@ -186,10 +186,13 @@ class Rhino {
     /**
      * Runs a SQL statement on the database and returns the results.
      * @param {String} sql - The SQL statement to execute.
+     * @param {Map.<String,*>|Object} [params] - Optional parameters `Object` or `Map` that will be added to the
+     * "in" parameters of the query. Keys and property names are used as the parameter name, and the value as the 
+     * parameter values.
      * @returns {ConnectedQuery|Promise.<Result>}
      */
-    query(sql) {
-        return new ConnectedQuery(this._pool).sql(sql);
+    query(sql, params) {
+        return new ConnectedQuery(this._pool).sql(sql, params);
     }
 
     /**

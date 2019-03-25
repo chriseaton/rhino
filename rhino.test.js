@@ -82,6 +82,29 @@ describe('#query', () => {
             expect(r.rows[0][0]).toBe(1);
             expect(r.rows[0][1]).toBe('hello');
             expect(r.rows[0][2]).toBe('world');
+            //test param object approach
+            r = await db
+                .query('SELECT @a AS A, @b AS B, @c AS C;', {
+                    a: 1, b: 'hello', c: 'world'
+                });
+            expect(r).toBeTruthy();
+            expect(r.columns.length).toBe(3);
+            expect(r.rows.length).toBe(1);
+            expect(r.rows[0][0]).toBe(1);
+            expect(r.rows[0][1]).toBe('hello');
+            expect(r.rows[0][2]).toBe('world');
+            //test param map approach
+            let m = new Map();
+            m.set('a', 1);
+            m.set('b', 'hello');
+            m.set('c', 'world');
+            r = await db.query('SELECT @a AS A, @b AS B, @c AS C;', m);
+            expect(r).toBeTruthy();
+            expect(r.columns.length).toBe(3);
+            expect(r.rows.length).toBe(1);
+            expect(r.rows[0][0]).toBe(1);
+            expect(r.rows[0][1]).toBe('hello');
+            expect(r.rows[0][2]).toBe('world');
         });
         test('runs a simple non-data multi-statement select query.', async () => {
             let r = await db.query('SELECT 1 AS A, \'hello\' AS B, \'world\' AS C; SELECT 123; SELECT \'ABC\';');
