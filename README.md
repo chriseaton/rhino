@@ -63,6 +63,7 @@ results = await db
     .out('valid', 'BIT');
 console.log(`Count: ${results.count}`);
 console.table(results.rows);
+//alternatively
 ```
 ```js
 // run queries in a transaction
@@ -1369,7 +1370,7 @@ Configure a `.env` file in the root project folder and define the variables for 
 ```
 RHINO_MSSQL_HOST = localhost
 RHINO_MSSQL_USER = sa
-RHINO_MSSQL_PASSWORD = YourStr0ng_PasswordHERE
+RHINO_MSSQL_PASSWORD = 
 RHINO_MSSQL_DATABASE = Rhino_Test
 ```
 
