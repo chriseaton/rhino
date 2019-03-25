@@ -88,14 +88,14 @@ db.destroy();
 
 # Feature list
 - [x] Query execution:
-  - [x] Basic singular SQL statements. [done v1]
-  - [x] SQL statements with parameters. [done v1]
-  - [ ] SQL statements using parameter (mapped) objects.
-  - [x] Batch SQL queries (no parameters). [done v1]
-  - [x] Batch SQL queries returning multiple result-sets. [done v1]
-  - [x] Stored procedure execution with parameters. [done v1]
-  - [x] Stored procedures returning multiple result-sets. [done v1]
-- [x] Single-Level transactions. [done v2]
+  - [x] Basic singular SQL statements. [v1]
+  - [x] SQL statements with parameters. [v1]
+  - [x] SQL statements using parameter (mapped) objects. [v2]
+  - [x] Batch SQL queries (no parameters). [v1]
+  - [x] Batch SQL queries returning multiple result-sets. [v1]
+  - [x] Stored procedure execution with parameters. [v1]
+  - [x] Stored procedures returning multiple result-sets. [v1]
+- [x] Single-Level transactions. [v2]
 - [ ] Nested transactions. 
 - [ ] Streaming query results.
 - [ ] Streaming bulk load.
@@ -138,6 +138,8 @@ configuration.</p>
 
 <dl>
 <dt><a href="#PromiseQuery">PromiseQuery</a> : <code><a href="#Query">Query</a></code> | <code>Promise.&lt;Result&gt;</code></dt>
+<dd></dd>
+<dt><a href="#QueryTypes">QueryTypes</a></dt>
 <dd></dd>
 </dl>
 
@@ -604,7 +606,7 @@ Wraps a SQL query and provides helper functions for managing parameters.
         * [.mode](#Query+mode)
         * [.requestTimeout](#Query+requestTimeout) : <code>Number</code>
         * [.timeout(ms)](#Query+timeout) ⇒ [<code>Query</code>](#Query)
-        * [.sql(statement)](#Query+sql) ⇒ [<code>Query</code>](#Query)
+        * [.sql(statement, [params])](#Query+sql) ⇒ [<code>Query</code>](#Query)
         * [.batch()](#Query+batch) ⇒ [<code>Query</code>](#Query)
         * [.exec()](#Query+exec) ⇒ [<code>Query</code>](#Query)
         * [.in(name, [type], [value])](#Query+in) ⇒ [<code>Query</code>](#Query)
@@ -616,7 +618,7 @@ Wraps a SQL query and provides helper functions for managing parameters.
             * [.QUERY](#Query.MODE.QUERY)
             * [.BATCH](#Query.MODE.BATCH)
             * [.EXEC](#Query.MODE.EXEC)
-        * [.TYPE](#Query.TYPE)
+        * [.TYPE](#Query.TYPE) : [<code>QueryTypes</code>](#QueryTypes)
         * [.AUTODETECT_TYPES](#Query.AUTODETECT_TYPES)
             * [.FLOATING_POINT](#Query.AUTODETECT_TYPES.FLOATING_POINT)
             * [.DATE](#Query.AUTODETECT_TYPES.DATE)
@@ -706,7 +708,7 @@ Sets the SQL query request timeout.
 
 <a name="Query+sql"></a>
 
-### query.sql(statement) ⇒ [<code>Query</code>](#Query)
+### query.sql(statement, [params]) ⇒ [<code>Query</code>](#Query)
 Sets the SQL query text (statment). Calling this function resets the query `mode` to an automatically determined
 value.
 
@@ -720,6 +722,7 @@ value.
 | Param | Type | Description |
 | --- | --- | --- |
 | statement | <code>String</code> | The SQL query text to be executed. |
+| [params] | <code>Map.&lt;String, \*&gt;</code> \| <code>Object</code> | Optional parameters `Object` or `Map` that will be added to the "in" parameters of the query. Keys and property names are used as the parameter name, and the value as the  parameter values. |
 
 
 * * *
@@ -762,7 +765,7 @@ Calling this when the query `mode` is set to BATCH will reset the `mode` to QUER
 
 | Param | Type | Default | Description |
 | --- | --- | --- | --- |
-| name | <code>String</code> |  | The parameter name, can be specified with the '@' character or not. |
+| name | <code>String</code> \| <code>Map.&lt;String, \*&gt;</code> \| <code>Object</code> |  | The parameter name, can be specified with the '@' character or not. If a `Map` or `Object` is specified - it's keys or property names are used as the parameter name, and the value(s) as the parameter values. |
 | [type] | <code>String</code> \| [<code>TDSType</code>](#Query.TDSType) |  | The explicit database type to use, if not specified, it is auto-determined. This parameter can be omitted. |
 | [value] | <code>String</code> \| <code>Number</code> \| <code>Date</code> \| <code>Buffer</code> \| <code>Object</code> \| <code>\*</code> | <code></code> | The value of the parameter. |
 
@@ -779,14 +782,14 @@ Calling this when the query `mode` is set to BATCH will reset the `mode` to QUER
 **Throws**:
 
 - Error if the `name` argument is falsey.
-- Error if the `name` argument is not a string.
-- Error if the `name` argument has already been specified or is not specified as a string.
+- Error if the `name` is a `Map` and a key is not a `String`.
+- Error if the `name` argument has already been specified.
 - Error if the `type` argument is falsey.
 
 
 | Param | Type | Description |
 | --- | --- | --- |
-| name | <code>String</code> | The parameter name, can be specified with the '@' character or not. |
+| name | <code>String</code> \| <code>Map.&lt;String, \*&gt;</code> \| <code>Object</code> | The parameter name, can be specified with the '@' character or not. If a `Map` or `Object` is specified - it's keys or property names are used as the parameter name, and the values(s) are ignored. |
 | type | <code>\*</code> | The explicit database type to use. Must be specified on out parameters. |
 
 
@@ -869,7 +872,7 @@ This mode indicates the query is a stored procedure call, and is executed using 
 
 <a name="Query.TYPE"></a>
 
-### Query.TYPE
+### Query.TYPE : [<code>QueryTypes</code>](#QueryTypes)
 TDS column types.
 
 **Kind**: static property of [<code>Query</code>](#Query)  
@@ -975,7 +978,7 @@ configuration.
         * [.log](#Rhino+log) : [<code>Log</code>](#Log)
         * [.destroy([done])](#Rhino+destroy)
         * [.ping()](#Rhino+ping) ⇒ <code>Boolean</code>
-        * [.query(sql)](#Rhino+query) ⇒ [<code>ConnectedQuery</code>](#ConnectedQuery) \| <code>Promise.&lt;Result&gt;</code>
+        * [.query(sql, [params])](#Rhino+query) ⇒ [<code>ConnectedQuery</code>](#ConnectedQuery) \| <code>Promise.&lt;Result&gt;</code>
     * _static_
         * [.create([config])](#Rhino.create) ⇒ [<code>Rhino</code>](#Rhino)
         * [.defaultConfig([config])](#Rhino.defaultConfig) ⇒ <code>RhinoConfiguration</code>
@@ -1044,7 +1047,7 @@ connection cannot be aquired for any reason.
 
 <a name="Rhino+query"></a>
 
-### rhino.query(sql) ⇒ [<code>ConnectedQuery</code>](#ConnectedQuery) \| <code>Promise.&lt;Result&gt;</code>
+### rhino.query(sql, [params]) ⇒ [<code>ConnectedQuery</code>](#ConnectedQuery) \| <code>Promise.&lt;Result&gt;</code>
 Runs a SQL statement on the database and returns the results.
 
 **Kind**: instance method of [<code>Rhino</code>](#Rhino)  
@@ -1052,6 +1055,7 @@ Runs a SQL statement on the database and returns the results.
 | Param | Type | Description |
 | --- | --- | --- |
 | sql | <code>String</code> | The SQL statement to execute. |
+| [params] | <code>Map.&lt;String, \*&gt;</code> \| <code>Object</code> | Optional parameters `Object` or `Map` that will be added to the "in" parameters of the query. Keys and property names are used as the parameter name, and the value as the  parameter values. |
 
 
 * * *
@@ -1159,7 +1163,7 @@ Rhino's configuration fully implements all configuration properties from `tediou
     * [new Transaction(pool)](#new_Transaction_new)
     * [.pool](#Transaction+pool) : <code>tarn.Pool</code>
     * [.queries](#Transaction+queries) : [<code>Array.&lt;Query&gt;</code>](#Query)
-    * [.query(sql)](#Transaction+query) ⇒ [<code>Query</code>](#Query)
+    * [.query(sql, [params])](#Transaction+query) ⇒ [<code>Query</code>](#Query)
     * [.savePoint()](#Transaction+savePoint)
     * [.clear()](#Transaction+clear)
     * [.commit([txName], [isolation])](#Transaction+commit) ⇒ <code>Promise.&lt;(Result\|Array.&lt;Result&gt;)&gt;</code>
@@ -1200,7 +1204,7 @@ The `tarn.Pool` instance linked to this query.
 
 <a name="Transaction+query"></a>
 
-### transaction.query(sql) ⇒ [<code>Query</code>](#Query)
+### transaction.query(sql, [params]) ⇒ [<code>Query</code>](#Query)
 Runs a SQL statement on the database and returns the results.
 
 **Kind**: instance method of [<code>Transaction</code>](#Transaction)  
@@ -1208,6 +1212,7 @@ Runs a SQL statement on the database and returns the results.
 | Param | Type | Description |
 | --- | --- | --- |
 | sql | <code>String</code> | The SQL statement to execute. |
+| [params] | <code>Map.&lt;String, \*&gt;</code> \| <code>Object</code> | Optional parameters `Object` or `Map` that will be added to the "in" parameters of the query. Keys and property names are used as the parameter name, and the value as the  parameter values. |
 
 
 * * *
@@ -1289,6 +1294,49 @@ Releases the connection if it is attached. The connection is released back to th
 
 ## PromiseQuery : [<code>Query</code>](#Query) \| <code>Promise.&lt;Result&gt;</code>
 **Kind**: global typedef  
+
+* * *
+
+<a name="QueryTypes"></a>
+
+## QueryTypes
+**Kind**: global typedef  
+**Properties**
+
+| Name | Type |
+| --- | --- |
+| TinyInt | [<code>TDSType</code>](#Query.TDSType) | 
+| Bit | [<code>TDSType</code>](#Query.TDSType) | 
+| SmallInt | [<code>TDSType</code>](#Query.TDSType) | 
+| Int | [<code>TDSType</code>](#Query.TDSType) | 
+| SmallDateTime | [<code>TDSType</code>](#Query.TDSType) | 
+| Real | [<code>TDSType</code>](#Query.TDSType) | 
+| Money | [<code>TDSType</code>](#Query.TDSType) | 
+| DateTime | [<code>TDSType</code>](#Query.TDSType) | 
+| Float | [<code>TDSType</code>](#Query.TDSType) | 
+| Decimal | [<code>TDSType</code>](#Query.TDSType) | 
+| Numeric | [<code>TDSType</code>](#Query.TDSType) | 
+| SmallMoney | [<code>TDSType</code>](#Query.TDSType) | 
+| BigInt | [<code>TDSType</code>](#Query.TDSType) | 
+| Image | [<code>TDSType</code>](#Query.TDSType) | 
+| Text | [<code>TDSType</code>](#Query.TDSType) | 
+| UniqueIdentifier | [<code>TDSType</code>](#Query.TDSType) | 
+| NText | [<code>TDSType</code>](#Query.TDSType) | 
+| VarBinary | [<code>TDSType</code>](#Query.TDSType) | 
+| VarChar | [<code>TDSType</code>](#Query.TDSType) | 
+| Binary | [<code>TDSType</code>](#Query.TDSType) | 
+| Char | [<code>TDSType</code>](#Query.TDSType) | 
+| NVarChar | [<code>TDSType</code>](#Query.TDSType) | 
+| NChar | [<code>TDSType</code>](#Query.TDSType) | 
+| Xml | [<code>TDSType</code>](#Query.TDSType) | 
+| Time | [<code>TDSType</code>](#Query.TDSType) | 
+| Date | [<code>TDSType</code>](#Query.TDSType) | 
+| DateTime2 | [<code>TDSType</code>](#Query.TDSType) | 
+| DateTimeOffset | [<code>TDSType</code>](#Query.TDSType) | 
+| UDT | [<code>TDSType</code>](#Query.TDSType) | 
+| TVP | [<code>TDSType</code>](#Query.TDSType) | 
+| Variant | [<code>TDSType</code>](#Query.TDSType) | 
+
 
 * * *
 
