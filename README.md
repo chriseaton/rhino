@@ -5,7 +5,7 @@
 Rhino is a tough, production-focused Node.js Microsoft SQL Server driver that incorporates pooling and runs the 
 well-supported [tedious](http://tediousjs.github.io/tedious/) package under
 the hood, fully utilizing all of it's [available configuration options](http://tediousjs.github.io/tedious/api-connection.html#function_newConnection). 
-Rhino was built to take the bullsh*t out of running database queries and let you, the developer, focus on running
+Rhino was built to take the frustration out of running database queries and let you, the developer, focus on running
 queries and getting reliable, fast, results.
 
 Rhino is a solid choice because...
