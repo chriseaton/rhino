@@ -82,7 +82,9 @@ results = await db
     .out('valid', 'BIT');
 console.log(`Count: ${results.count}`);
 console.table(results.rows);
-//alternatively
+//use object parameters
+results = await db
+    .query('SELECT TOP 10 FROM addresses WHERE street LIKE @street', { street: '% Avenue' });
 ```
 ```js
 // run queries in a transaction
