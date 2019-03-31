@@ -2,17 +2,18 @@
 
 # Rhino
 
-Rhino is a tough, production-focused Node.js Microsoft SQL Server driver that incorporates pooling and is powered by
-the [tedious](http://tediousjs.github.io/tedious/api-connection.html#function_newConnection) driver. It was built to 
-take the bullsh*t out of running database queries and let you, the developer, focus on just running some queries and 
-getting reliable, fast results back from the database server.
+Rhino is a tough, production-focused Node.js Microsoft SQL Server driver that incorporates pooling and runs the 
+well-supported [tedious](http://tediousjs.github.io/tedious/) package under
+the hood, fully utilizing all of it's [available configuration options](http://tediousjs.github.io/tedious/api-connection.html#function_newConnection). 
+Rhino was built to take the bullsh*t out of running database queries and let you, the developer, focus on running
+queries and getting reliable, fast, results.
 
 Rhino is a solid choice because...
 - It fully implements JSdoc and is tested with [VS Code](https://code.visualstudio.com/) auto-completion.
 - A dependency list so small we can list it here: [tedious](https://github.com/tediousjs/tedious) and [tarn](https://github.com/Vincit/tarn.js).
 - It is a solid, modern, unit-tested implementation built for heavy production use. 
 - Employs async/await/Promise functions to let you work asynchronously.
-- Manages connections for you using an internal pool, stop worrying about connections and just build queries.
+- Manages connections for you using an internal pool, stop worrying and query!
 - Open-source and accepting pull requests.
 
 # Feature list
@@ -49,6 +50,7 @@ const rhino = require('rhino');
 
 ...
 let db = await rhino.create({
+    //tedious config options
     server: 'localhost',
     authentication: {
         options: {  
@@ -56,6 +58,7 @@ let db = await rhino.create({
             password: "mypassword"
         }
     },
+    //tarn pooling options
     pool: {
         min: 0,
         max: 10
