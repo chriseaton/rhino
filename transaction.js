@@ -12,6 +12,11 @@ const { Request: TDS_Request } = require('tedious');
  * @property {String} name
  */
 
+/**
+ * The `Transaction` class provides the ability to queue multiple queries for execution under a SQL transaction, 
+ * optionally including save-points. It exposes methods to commit and rollback the entire set of queries or to
+ * a particular save-point.
+ */
 class Transaction {
     /**
      * Creates a new instance of a `Transaction`. 

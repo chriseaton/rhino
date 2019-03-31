@@ -83,8 +83,10 @@ results = await db
 console.log(`Count: ${results.count}`);
 console.table(results.rows);
 //use object parameters
-results = await db
-    .query('SELECT TOP 10 FROM addresses WHERE street LIKE @street', { street: '% Avenue' });
+results = await db.query(
+    'SELECT TOP 10 FROM addresses WHERE street LIKE @street', 
+    { street: '% Avenue' }
+);
 ```
 ```js
 // run queries in a transaction
@@ -151,7 +153,10 @@ and closing of connections to the database. </p>
 configuration.</p>
 </dd>
 <dt><a href="#Transaction">Transaction</a></dt>
-<dd></dd>
+<dd><p>The <code>Transaction</code> class provides the ability to queue multiple queries for execution under a SQL transaction, 
+optionally including save-points. It exposes methods to commit and rollback the entire set of queries or to
+a particular save-point.</p>
+</dd>
 </dl>
 
 ## Typedefs
@@ -1177,6 +1182,10 @@ Rhino's configuration fully implements all configuration properties from `tediou
 <a name="Transaction"></a>
 
 ## Transaction
+The `Transaction` class provides the ability to queue multiple queries for execution under a SQL transaction, 
+optionally including save-points. It exposes methods to commit and rollback the entire set of queries or to
+a particular save-point.
+
 **Kind**: global class  
 
 * [Transaction](#Transaction)
