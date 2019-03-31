@@ -6,6 +6,12 @@ const Result = require('./result.js');
 const tedious = require('tedious');
 const { Request: TDS_Request } = require('tedious');
 
+/**
+ * @typedef {Object} Transaction.SavePoint
+ * @property {Boolean} savepoint=true
+ * @property {String} name
+ */
+
 class Transaction {
     /**
      * Creates a new instance of a `Transaction`. 
@@ -24,7 +30,7 @@ class Transaction {
         this.pool = pool;
 
         /**
-         * @type {Array.<Query>}
+         * @type {Array.<Query|Transaction.SavePoint>}
          */
         this.queries = [];
 
@@ -55,12 +61,24 @@ class Transaction {
     /**
      * Add a save-point to the transaction. This will follow the previously added query.
      * @throws Error if no queries are present. A save-point should follow at least one query.
+     * @param {String} [name] - The name of the transaction savepoint. If no name is specified, one is automatically
+     * generated. You can use this name with the rollback command.
+     * @returns {String} Returns the name of the save-point.
      */
-    savePoint() {
-        if (!this.queries || !this.queries.length) {
+    savePoint(name) {
+        let nameType = typeof name;
+        if (nameType !== 'string' && nameType !== 'undefined') {
+            throw new Error('The parameter "name" argument must be a string if specified.');
+        } else if (!this.queries || !this.queries.length) {
             throw new Error('Failed to add transaction save-point. A save-point should follow at least one query.');
+        } else if (this.queries.length > 0 && this.queries[this.queries.length - 1].savepoint) {
+            throw new Error('Failed to add transaction save-point. A save-point can not follow another save-point.');
         }
-        this.queries.push(true);
+        if (!name) {
+            name = `rhino_tx_sp_${this.queries.length}${Date.now()}${Math.floor(Math.random() * 1000)}`;
+        }
+        this.queries.push({ savepoint: true, name: name });
+        return name;
     }
 
     /**
@@ -112,7 +130,7 @@ class Transaction {
                     }
                     resolve();
                 };
-                if (txName && isolation) {
+                if (txName || isolation) {
                     self._conn._tdsConnection.beginTransaction(cb, txName, isolation);
                 } else {
                     self._conn._tdsConnection.beginTransaction(cb);
@@ -121,15 +139,15 @@ class Transaction {
             //add queries
             let queryResults = [];
             for (let q of this.queries) {
-                if (q === true) {
+                if (q.savepoint === true) {
                     //add a save-point to the transaction.
                     await new Promise((resolve, reject) => {
-                        self._conn.saveTransaction((err) => {
+                        self._conn._tdsConnection.saveTransaction((err) => {
                             if (err) {
                                 reject(err);
                             }
                             resolve();
-                        });
+                        }, q.name);
                     });
                 } else {
                     queryResults.push(await ConnectedQuery._executeRequest(q, this._conn));
@@ -156,12 +174,15 @@ class Transaction {
      * @throws Error if the `pool` property is falsey.
      * @throws Error if there is no active transaction connection.
      * @throws Error if the active connection does not have an active transaction.
+     * @param {String} [name] - The name of a savepoint to rollback to. If not specified, the entire transaction will
+     * be rolled back.
      */
-    async rollback() {
+    async rollback(name) {
         if (!this.pool) {
             throw new Error('The "pool" property is required.');
         } else if (!this._conn) {
-            throw new Error('Failed to rollback transaction. There is no active connection.');
+            //no connection was ever established, so just return
+            return;
         } else if (!this._conn._tdsConnection.inTransaction) {
             throw new Error('Failed to rollback transaction. There is no active transaction on the connection.');
         }
@@ -173,7 +194,7 @@ class Transaction {
                     reject(err);
                 }
                 resolve();
-            });
+            }, name);
         });
         //done, release connection
         this._releaseConnection();
@@ -183,7 +204,7 @@ class Transaction {
      * Releases the connection if it is attached. The connection is released back to the rhino pool.
      */
     _releaseConnection() {
-        if (this._conn) {
+        if (this._conn && this.pool) {
             this.pool.release(this._conn);
         }
         this._conn = null;

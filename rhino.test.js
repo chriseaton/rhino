@@ -212,37 +212,72 @@ describe('#query', () => {
 });
 
 describe('#transaction', () => {
-    describe('non-data selects', () => {
-        let db = null;
-        beforeAll(() => {
-            db = rhino.create({
-                options: {
-                    useColumnNames: false
-                }
-            });
+    let db = null;
+    beforeAll(() => {
+        db = rhino.create({
+            options: {
+                useColumnNames: false
+            }
         });
-        afterAll(() => {
-            db.destroy();
-        });
-        test('runs a simple non-data multi-statement select queries.', async () => {
-            let tx = db.transaction();
-            tx.query('SELECT 1 AS A, \'hello\' AS B, \'world\' AS C; SELECT 123; SELECT \'ABC\';');
-            tx.query('SELECT TOP 1 * FROM dbo.Role;');
-            let r = await tx.commit();
-            expect(r.length).toBe(4);
-            expect(r[0].columns.length).toBe(3);
-            expect(r[0].rows.length).toBe(1);
-            expect(r[0].rows[0][0]).toBe(1);
-            expect(r[0].rows[0][1]).toBe('hello');
-            expect(r[0].rows[0][2]).toBe('world');
-            expect(r[1].columns.length).toBe(1);
-            expect(r[1].rows.length).toBe(1);
-            expect(r[1].rows[0][0]).toBe(123);
-            expect(r[2].columns.length).toBe(1);
-            expect(r[2].rows.length).toBe(1);
-            expect(r[2].rows[0][0]).toBe('ABC');
-            expect(r[3].rows[0][0]).toBe(1);
-            expect(r[3].rows[0][1]).toBe('Administrator');
-        });
+    });
+    afterAll(() => {
+        db.destroy();
+    });
+    test('runs a simple non-data multi-statement select queries.', async () => {
+        let tx = db.transaction();
+        tx.query('SELECT 1 AS A, \'hello\' AS B, \'world\' AS C; SELECT 123; SELECT \'ABC\';');
+        tx.query('SELECT TOP 1 * FROM dbo.Role;');
+        let r = await tx.commit();
+        expect(r.length).toBe(4);
+        expect(r[0].columns.length).toBe(3);
+        expect(r[0].rows.length).toBe(1);
+        expect(r[0].rows[0][0]).toBe(1);
+        expect(r[0].rows[0][1]).toBe('hello');
+        expect(r[0].rows[0][2]).toBe('world');
+        expect(r[1].columns.length).toBe(1);
+        expect(r[1].rows.length).toBe(1);
+        expect(r[1].rows[0][0]).toBe(123);
+        expect(r[2].columns.length).toBe(1);
+        expect(r[2].rows.length).toBe(1);
+        expect(r[2].rows[0][0]).toBe('ABC');
+        expect(r[3].rows[0][0]).toBe(1);
+        expect(r[3].rows[0][1]).toBe('Administrator');
+    });
+    test('rollback completes when no commit occurred.', async () => {
+        let tx = db.transaction();
+        tx.query('INSERT INTO dbo.Role (Name) VALUES (@name);', { name: 'TXTEST' });
+        await tx.rollback();
+        let r = await db.query('SELECT * FROM dbo.Role WHERE Name = @name', { name: 'TXTEST' });
+        expect(r.rows.length).toBe(0);
+    });
+    test('rollback completes after a commit fails.', async () => {
+        let tx = db.transaction();
+        try {
+            tx.query('INSERT INTO dbo.Role (Name) VALUES (@name);', { name: 'TXTEST' });
+            tx.query('THISWILLFAIL;');
+            await tx.commit();
+        } catch (err) {
+            await tx.rollback();
+        }
+        let r = await db.query('SELECT * FROM dbo.Role WHERE Name = @name', { name: 'TXTEST' });
+        expect(r.rows.length).toBe(0);
+    });
+    test('rollback works up to the last savepoint.', async () => {
+        await db.query('DELETE FROM dbo.Role WHERE Name = @name', { name: 'SPTEST' });
+        let tx = db.transaction();
+        try {
+            tx.query('INSERT INTO dbo.Role (Name) VALUES (@name);', { name: 'SPTEST' });
+            tx.savePoint('insertsptest');
+            //insert a duplicate record after the savepoint (would create 2 results with the name if it was committed).
+            tx.query('INSERT INTO dbo.Role (Name) VALUES (@name);', { name: 'SPTEST' }); 
+            //fail (identity insert conflict)
+            tx.query('INSERT INTO dbo.Role (ID, Name) VALUES (1, \'Shouldnt exist.\');');
+            await tx.commit();
+        } catch (err) {
+            await tx.rollback('insertsptest');
+        }
+        let r = await db.query('SELECT * FROM dbo.Role WHERE Name = @name', { name: 'SPTEST' });
+        expect(r.rows.length).toBe(1);
+        await db.query('DELETE FROM dbo.Role WHERE Name = @name', { name: 'SPTEST' });
     });
 });
