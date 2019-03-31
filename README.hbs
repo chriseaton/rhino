@@ -15,6 +15,22 @@ Rhino is a solid choice because...
 - Manages connections for you using an internal pool, stop worrying about connections and just build queries.
 - Open-source and accepting pull requests.
 
+# Feature list
+- [x] Automatic connection management.
+- [x] Query execution:
+  - [x] Simple SQL statements.
+  - [x] SQL statements with parameters.
+  - [x] SQL statements using parameter (mapped) objects.
+  - [x] Batch SQL queries (no parameters).
+  - [x] Batch SQL queries returning multiple result-sets.
+  - [x] Stored procedure execution with parameters.
+  - [x] Stored procedures returning multiple result-sets.
+- [x] Single-Level transactions.
+- [x] Transaction save-point support.
+- [ ] Nested transactions. 
+- [ ] Streaming query results.
+- [ ] Streaming bulk load.
+
 ## Installation
 
 ```sh
@@ -79,6 +95,18 @@ try {
     console.info('Transaction rolled back.');
     throw err;
 }
+// run transactions with save-points.
+let tx = db.transaction();
+try {
+    tx.query('INSERT INTO dbo.Addresses (Street) VALUES (@st)', { st: '12431 NE Martin St.' });
+    tx.savePoint('mysavepoint');
+    tx.query('INSERT INTO dbo.Addresses (ID) VALUES (1);');
+    let results = await tx.commit();
+} catch (err) {
+    tx.rollback('mysavepoint');
+    console.info('Transaction rolled back to save-point.');
+    throw err;
+}
 ```
 ```js
 ...
@@ -86,20 +114,6 @@ try {
 // clean up resources
 db.destroy(); 
 ```
-
-# Feature list
-- [x] Query execution:
-  - [x] Basic singular SQL statements. [v1]
-  - [x] SQL statements with parameters. [v1]
-  - [x] SQL statements using parameter (mapped) objects. [v2]
-  - [x] Batch SQL queries (no parameters). [v1]
-  - [x] Batch SQL queries returning multiple result-sets. [v1]
-  - [x] Stored procedure execution with parameters. [v1]
-  - [x] Stored procedures returning multiple result-sets. [v1]
-- [x] Single-Level transactions. [v2]
-- [ ] Nested transactions. 
-- [ ] Streaming query results.
-- [ ] Streaming bulk load.
 
 # API 
 

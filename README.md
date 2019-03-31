@@ -15,6 +15,22 @@ Rhino is a solid choice because...
 - Manages connections for you using an internal pool, stop worrying about connections and just build queries.
 - Open-source and accepting pull requests.
 
+# Feature list
+- [x] Automatic connection management.
+- [x] Query execution:
+  - [x] Simple SQL statements.
+  - [x] SQL statements with parameters.
+  - [x] SQL statements using parameter (mapped) objects.
+  - [x] Batch SQL queries (no parameters).
+  - [x] Batch SQL queries returning multiple result-sets.
+  - [x] Stored procedure execution with parameters.
+  - [x] Stored procedures returning multiple result-sets.
+- [x] Single-Level transactions.
+- [x] Transaction save-point support.
+- [ ] Nested transactions. 
+- [ ] Streaming query results.
+- [ ] Streaming bulk load.
+
 ## Installation
 
 ```sh
@@ -79,6 +95,18 @@ try {
     console.info('Transaction rolled back.');
     throw err;
 }
+// run transactions with save-points.
+let tx = db.transaction();
+try {
+    tx.query('INSERT INTO dbo.Addresses (Street) VALUES (@st)', { st: '12431 NE Martin St.' });
+    tx.savePoint('mysavepoint');
+    tx.query('INSERT INTO dbo.Addresses (ID) VALUES (1);');
+    let results = await tx.commit();
+} catch (err) {
+    tx.rollback('mysavepoint');
+    console.info('Transaction rolled back to save-point.');
+    throw err;
+}
 ```
 ```js
 ...
@@ -86,20 +114,6 @@ try {
 // clean up resources
 db.destroy(); 
 ```
-
-# Feature list
-- [x] Query execution:
-  - [x] Basic singular SQL statements. [v1]
-  - [x] SQL statements with parameters. [v1]
-  - [x] SQL statements using parameter (mapped) objects. [v2]
-  - [x] Batch SQL queries (no parameters). [v1]
-  - [x] Batch SQL queries returning multiple result-sets. [v1]
-  - [x] Stored procedure execution with parameters. [v1]
-  - [x] Stored procedures returning multiple result-sets. [v1]
-- [x] Single-Level transactions. [v2]
-- [ ] Nested transactions. 
-- [ ] Streaming query results.
-- [ ] Streaming bulk load.
 
 # API 
 
@@ -1162,14 +1176,17 @@ Rhino's configuration fully implements all configuration properties from `tediou
 
 * [Transaction](#Transaction)
     * [new Transaction(pool)](#new_Transaction_new)
-    * [.pool](#Transaction+pool) : <code>tarn.Pool</code>
-    * [.queries](#Transaction+queries) : [<code>Array.&lt;Query&gt;</code>](#Query)
-    * [.query(sql, [params])](#Transaction+query) ⇒ [<code>Query</code>](#Query)
-    * [.savePoint()](#Transaction+savePoint)
-    * [.clear()](#Transaction+clear)
-    * [.commit([txName], [isolation])](#Transaction+commit) ⇒ <code>Promise.&lt;(Result\|Array.&lt;Result&gt;)&gt;</code>
-    * [.rollback()](#Transaction+rollback)
-    * [._releaseConnection()](#Transaction+_releaseConnection)
+    * _instance_
+        * [.pool](#Transaction+pool) : <code>tarn.Pool</code>
+        * [.queries](#Transaction+queries) : <code>Array.&lt;(Query\|Transaction.SavePoint)&gt;</code>
+        * [.query(sql, [params])](#Transaction+query) ⇒ [<code>Query</code>](#Query)
+        * [.savePoint([name])](#Transaction+savePoint) ⇒ <code>String</code>
+        * [.clear()](#Transaction+clear)
+        * [.commit([txName], [isolation])](#Transaction+commit) ⇒ <code>Promise.&lt;(Result\|Array.&lt;Result&gt;)&gt;</code>
+        * [.rollback([name])](#Transaction+rollback)
+        * [._releaseConnection()](#Transaction+_releaseConnection)
+    * _static_
+        * [.SavePoint](#Transaction.SavePoint) : <code>Object</code>
 
 
 * * *
@@ -1198,7 +1215,7 @@ The `tarn.Pool` instance linked to this query.
 
 <a name="Transaction+queries"></a>
 
-### transaction.queries : [<code>Array.&lt;Query&gt;</code>](#Query)
+### transaction.queries : <code>Array.&lt;(Query\|Transaction.SavePoint)&gt;</code>
 **Kind**: instance property of [<code>Transaction</code>](#Transaction)  
 
 * * *
@@ -1220,13 +1237,19 @@ Runs a SQL statement on the database and returns the results.
 
 <a name="Transaction+savePoint"></a>
 
-### transaction.savePoint()
+### transaction.savePoint([name]) ⇒ <code>String</code>
 Add a save-point to the transaction. This will follow the previously added query.
 
 **Kind**: instance method of [<code>Transaction</code>](#Transaction)  
+**Returns**: <code>String</code> - Returns the name of the save-point.  
 **Throws**:
 
 - Error if no queries are present. A save-point should follow at least one query.
+
+
+| Param | Type | Description |
+| --- | --- | --- |
+| [name] | <code>String</code> | The name of the transaction savepoint. If no name is specified, one is automatically generated. You can use this name with the rollback command. |
 
 
 * * *
@@ -1269,7 +1292,7 @@ Commits all queries in the transaction queue.
 
 <a name="Transaction+rollback"></a>
 
-### transaction.rollback()
+### transaction.rollback([name])
 Rolls back the active transaction.
 
 **Kind**: instance method of [<code>Transaction</code>](#Transaction)  
@@ -1280,6 +1303,11 @@ Rolls back the active transaction.
 - Error if the active connection does not have an active transaction.
 
 
+| Param | Type | Description |
+| --- | --- | --- |
+| [name] | <code>String</code> | The name of a savepoint to rollback to. If not specified, the entire transaction will be rolled back. |
+
+
 * * *
 
 <a name="Transaction+_releaseConnection"></a>
@@ -1288,6 +1316,20 @@ Rolls back the active transaction.
 Releases the connection if it is attached. The connection is released back to the rhino pool.
 
 **Kind**: instance method of [<code>Transaction</code>](#Transaction)  
+
+* * *
+
+<a name="Transaction.SavePoint"></a>
+
+### Transaction.SavePoint : <code>Object</code>
+**Kind**: static typedef of [<code>Transaction</code>](#Transaction)  
+**Properties**
+
+| Name | Type | Default |
+| --- | --- | --- |
+| savepoint | <code>Boolean</code> | <code>true</code> | 
+| name | <code>String</code> |  | 
+
 
 * * *
 
