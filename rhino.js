@@ -5,10 +5,6 @@ const ConnectedQuery = require('./connected-query.js');
 const Transaction = require('./transaction.js');
 const Result = require('./result.js');
 
-if (require('dotenv')) {
-    require('dotenv').config();
-}
-
 /**
  * Please refer to:  {@link https://github.com/Vincit/tarn.js|Tarn on GitHub}
  * @typedef Rhino.PoolConfiguration

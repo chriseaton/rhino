@@ -1,5 +1,6 @@
 const Connection = require('./connection.js');
 const rhino = require('./rhino');
+require('dotenv').config();
 require('jest');
 
 describe('Multiple Connection instances.', () => {

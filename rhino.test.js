@@ -2,6 +2,7 @@ const rhino = require('./rhino.js');
 const Query = require('./query.js');
 const fs = require('fs');
 const path = require('path');
+require('dotenv').config();
 require('jest');
 
 describe('#ping', () => {
