@@ -1,5 +1,7 @@
 ![Rhino](./rhino.png)
 
+[![NPM](https://nodei.co/npm/rhino.png)](https://npmjs.org/package/rhino)
+
 # Rhino
 
 Rhino is a tough, production-focused Node.js Microsoft SQL Server driver that incorporates pooling and runs the 
