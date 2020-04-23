@@ -56,8 +56,6 @@ describe('#query', () => {
                 expect(r.rows[0].A).toBe(1);
                 expect(r.rows[0].B).toBe('hello');
                 expect(r.rows[0].C).toBe('world');
-            } catch (err) {
-                throw err;
             } finally {
                 db.destroy();
             }
@@ -270,7 +268,7 @@ describe('#transaction', () => {
             tx.query('INSERT INTO dbo.Role (Name) VALUES (@name);', { name: 'SPTEST' });
             tx.savePoint('insertsptest');
             //insert a duplicate record after the savepoint (would create 2 results with the name if it was committed).
-            tx.query('INSERT INTO dbo.Role (Name) VALUES (@name);', { name: 'SPTEST' }); 
+            tx.query('INSERT INTO dbo.Role (Name) VALUES (@name);', { name: 'SPTEST' });
             //fail (identity insert conflict)
             tx.query('INSERT INTO dbo.Role (ID, Name) VALUES (1, \'Shouldnt exist.\');');
             await tx.commit();

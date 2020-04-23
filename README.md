@@ -1420,6 +1420,15 @@ docker run -d -p 1433:1433 rhino:test
 ```
 
 When run using the command above, the docker server will be accessible on localhost port 1433.
+*Please note: the container must build the test database after running, this may take 1-5 minutes.*
+
+View the logs using the container id (which can be found also with `docker ps`).
+```
+docker logs [container-id]
+```
+
+When the server is ready, you should see the "Done installing test database. Server is ready." message in the logs.
+
 
 ### 3. Setup testing environment.
 Configure a `.env` file in the root project folder and define the variables for connecting:

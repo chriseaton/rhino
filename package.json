@@ -33,15 +33,15 @@
     },
     "homepage": "https://github.com/chriseaton/rhino#readme",
     "dependencies": {
-        "tarn": "^1.1.5",
-        "tedious": "^5.0.3"
+        "tarn": "^2.0.0",
+        "tedious": "^8.3.0"
     },
     "devDependencies": {
-        "dotenv": "^6.2.0",
-        "eslint": "^4.19.1",
-        "eslint-plugin-jest": "^21.27.2",
-        "jest": "^24.9.0",
-        "jsdoc-to-markdown": "^4.0.1"
+        "dotenv": "^8.2.0",
+        "eslint": "^6.8.0",
+        "eslint-plugin-jest": "^23.8.2",
+        "jest": "^25.4.0",
+        "jsdoc-to-markdown": "^5.0.3"
     },
     "jsdoc2md": {
         "files": "{,!(node_modules|test)/**/}*!(*.test|*.ignore).js",
