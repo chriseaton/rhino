@@ -77,11 +77,6 @@ class Rhino {
         process.on('exit', () => {
             self.destroy();
         });
-        ['SIGHUP', 'SIGINT', 'SIGQUIT', 'SIGILL', 'SIGBUS', 'SIGFPE', 'SIGSEGV', 'SIGTERM'].forEach(function (sig) {
-            process.on(sig, (signal, number) => {
-                self.destroy();
-            });
-        });
     }
 
     /**
