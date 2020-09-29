@@ -53,7 +53,7 @@ class ConnectedQuery extends Query {
                 return ConnectedQuery._executeRequest(q, conn)
                     .finally(() => {
                         if (conn) {
-                            this.pool.release(conn);
+                            q.pool.release(conn);
                         }
                     });
             })

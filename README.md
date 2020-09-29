@@ -1,7 +1,5 @@
 ![Rhino](./rhino.png)
 
-[![NPM](https://nodei.co/npm/rhino.png)](https://npmjs.org/package/rhino)
-
 # Rhino
 
 Rhino is a tough, production-focused Node.js Microsoft SQL Server driver that incorporates pooling and runs the 
@@ -28,6 +26,7 @@ Rhino is a solid choice because...
   - [x] Batch SQL queries returning multiple result-sets.
   - [x] Stored procedure execution with parameters.
   - [x] Stored procedures returning multiple result-sets.
+  - [x] Bulk loads.
 - [x] Single-Level transactions.
 - [x] Transaction save-point support.
 - [ ] Nested transactions. 
@@ -118,6 +117,17 @@ try {
 }
 ```
 ```js
+// run a bulk-load
+let bulk = db.bulk('dbo.Theme', { timeout: 10000 });
+await bk.column('Name', Query.TYPE.VarChar, { nullable: false, length: 512 });
+await bk.column('HexCode', Query.TYPE.VarChar, { nullable: false, length: 512 });
+for (let x = 0; x < 1000; x++) {
+    //add rows
+    bk.add({ Name: `name${x}`, HexCode: `#000${x}${x}${x}` });
+}
+let result = await bk.execute();
+```
+```js
 ...
 // all done, forever!
 // clean up resources
@@ -129,6 +139,9 @@ db.destroy();
 ## Classes
 
 <dl>
+<dt><a href="#BulkQuery">BulkQuery</a></dt>
+<dd><p>Provides promise extensions to a <code>BulkQuery</code> object and allows it to be executed on an aquired connection.</p>
+</dd>
 <dt><a href="#ConnectedQuery">ConnectedQuery</a></dt>
 <dd><p>Provides promise extensions to a <code>Query</code> object and allows it to be executed on an aquired connection.</p>
 </dd>
@@ -164,11 +177,140 @@ a particular save-point.</p>
 ## Typedefs
 
 <dl>
+<dt><a href="#PromiseBulkQuery">PromiseBulkQuery</a> : <code><a href="#BulkQuery">BulkQuery</a></code> | <code>Promise.&lt;Result&gt;</code></dt>
+<dd></dd>
 <dt><a href="#PromiseQuery">PromiseQuery</a> : <code><a href="#Query">Query</a></code> | <code>Promise.&lt;Result&gt;</code></dt>
 <dd></dd>
 <dt><a href="#QueryTypes">QueryTypes</a></dt>
 <dd></dd>
 </dl>
+
+<a name="BulkQuery"></a>
+
+## BulkQuery
+Provides promise extensions to a `BulkQuery` object and allows it to be executed on an aquired connection.
+
+**Kind**: global class  
+
+* [BulkQuery](#BulkQuery)
+    * [new BulkQuery(tableName, options, pool)](#new_BulkQuery_new)
+    * _instance_
+        * [.tableName](#BulkQuery+tableName) : <code>String</code>
+        * [.options](#BulkQuery+options) : [<code>Options</code>](#BulkQuery.Options)
+        * [.pool](#BulkQuery+pool) : <code>tarn.Pool</code>
+        * [.aquire()](#BulkQuery+aquire) ⇒ [<code>BulkQuery</code>](#BulkQuery)
+        * [.execute()](#BulkQuery+execute)
+        * [.column(name, type, options)](#BulkQuery+column) ⇒ [<code>BulkQuery</code>](#BulkQuery)
+        * [.add(row)](#BulkQuery+add) ⇒ [<code>BulkQuery</code>](#BulkQuery)
+    * _static_
+        * [.Options](#BulkQuery.Options)
+
+
+* * *
+
+<a name="new_BulkQuery_new"></a>
+
+### new BulkQuery(tableName, options, pool)
+Creates a new instance of a `BulkQuery`.
+
+
+| Param | Type | Description |
+| --- | --- | --- |
+| tableName | <code>String</code> | The name of the table to perform the bulk insert. |
+| options | [<code>Options</code>](#BulkQuery.Options) | Options to pass to the bulk query. |
+| pool | <code>tarn.Pool</code> | The connection pool to utilize for aquiring the connection. |
+
+
+* * *
+
+<a name="BulkQuery+tableName"></a>
+
+### bulkQuery.tableName : <code>String</code>
+**Kind**: instance property of [<code>BulkQuery</code>](#BulkQuery)  
+
+* * *
+
+<a name="BulkQuery+options"></a>
+
+### bulkQuery.options : [<code>Options</code>](#BulkQuery.Options)
+**Kind**: instance property of [<code>BulkQuery</code>](#BulkQuery)  
+
+* * *
+
+<a name="BulkQuery+pool"></a>
+
+### bulkQuery.pool : <code>tarn.Pool</code>
+The `tarn.Pool` instance linked to this query.
+
+**Kind**: instance property of [<code>BulkQuery</code>](#BulkQuery)  
+
+* * *
+
+<a name="BulkQuery+aquire"></a>
+
+### bulkQuery.aquire() ⇒ [<code>BulkQuery</code>](#BulkQuery)
+Establishes a connection to begin a bulk-load operation.    
+This is called automatically upon `column` or `row`, so you generally *do not* need to call it explicitly.
+
+**Kind**: instance method of [<code>BulkQuery</code>](#BulkQuery)  
+
+* * *
+
+<a name="BulkQuery+execute"></a>
+
+### bulkQuery.execute()
+Fire and complete the bulk-load.
+
+**Kind**: instance method of [<code>BulkQuery</code>](#BulkQuery)  
+
+* * *
+
+<a name="BulkQuery+column"></a>
+
+### bulkQuery.column(name, type, options) ⇒ [<code>BulkQuery</code>](#BulkQuery)
+Adds a column to the bulk query.
+
+**Kind**: instance method of [<code>BulkQuery</code>](#BulkQuery)  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| name | <code>String</code> | The column name. |
+| type | [<code>QueryTypes</code>](#QueryTypes) | The TDS type of the column. |
+| options | <code>\*</code> | column options. |
+
+
+* * *
+
+<a name="BulkQuery+add"></a>
+
+### bulkQuery.add(row) ⇒ [<code>BulkQuery</code>](#BulkQuery)
+Adds a row to the bulk query.
+
+**Kind**: instance method of [<code>BulkQuery</code>](#BulkQuery)  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| row | <code>Array</code> \| <code>Object</code> | The row object or array. If an object it should have key/value pairs representing  column name and value. If an array then it should represent the values of each column in the same order which  they were added to the `BulkQuery` object. |
+
+
+* * *
+
+<a name="BulkQuery.Options"></a>
+
+### BulkQuery.Options
+**Kind**: static typedef of [<code>BulkQuery</code>](#BulkQuery)  
+**Properties**
+
+| Name | Type | Description |
+| --- | --- | --- |
+| checkConstraints | <code>Boolean</code> | Honors constraints during bulk load, using T-SQL CHECK_CONSTRAINTS. |
+| fireTriggers | <code>Boolean</code> | Honors insert triggers during bulk load, using the T-SQL FIRE_TRIGGERS. |
+| keepNulls | <code>Boolean</code> | Honors null value passed, ignores the default values set on table, using T-SQL KEEP_NULLS. |
+| tableLock | <code>Boolean</code> | Places a bulk update(BU) lock on table while performing bulk load, using T-SQL TABLOCK. |
+| timeout | <code>Number</code> | The number of milliseconds before the bulk load is considered failed, or 0 for no timeout. |
+
+
+* * *
 
 <a name="ConnectedQuery"></a>
 
@@ -1006,6 +1148,7 @@ configuration.
         * [.destroy([done])](#Rhino+destroy)
         * [.ping()](#Rhino+ping) ⇒ <code>Boolean</code>
         * [.query(sql, [params])](#Rhino+query) ⇒ [<code>ConnectedQuery</code>](#ConnectedQuery) \| <code>Promise.&lt;Result&gt;</code>
+        * [.bulk(tableName, options)](#Rhino+bulk) ⇒ [<code>BulkQuery</code>](#BulkQuery)
     * _static_
         * [.create([config])](#Rhino.create) ⇒ [<code>Rhino</code>](#Rhino)
         * [.defaultConfig([config])](#Rhino.defaultConfig) ⇒ <code>RhinoConfiguration</code>
@@ -1083,6 +1226,21 @@ Runs a SQL statement on the database and returns the results.
 | --- | --- | --- |
 | sql | <code>String</code> | The SQL statement to execute. |
 | [params] | <code>Map.&lt;String, \*&gt;</code> \| <code>Object</code> | Optional parameters `Object` or `Map` that will be added to the "in" parameters of the query. Keys and property names are used as the parameter name, and the value as the  parameter values. |
+
+
+* * *
+
+<a name="Rhino+bulk"></a>
+
+### rhino.bulk(tableName, options) ⇒ [<code>BulkQuery</code>](#BulkQuery)
+Creates a new bulk-loading query that can be used to rapidly insert large amounts of data.
+
+**Kind**: instance method of [<code>Rhino</code>](#Rhino)  
+
+| Param | Type | Description |
+| --- | --- | --- |
+| tableName | <code>String</code> | The name of the table to perform the bulk insert. |
+| options | [<code>Options</code>](#BulkQuery.Options) | Options to pass to the bulk query. |
 
 
 * * *
@@ -1349,6 +1507,13 @@ Releases the connection if it is attached. The connection is released back to th
 
 * * *
 
+<a name="PromiseBulkQuery"></a>
+
+## PromiseBulkQuery : [<code>BulkQuery</code>](#BulkQuery) \| <code>Promise.&lt;Result&gt;</code>
+**Kind**: global typedef  
+
+* * *
+
 <a name="PromiseQuery"></a>
 
 ## PromiseQuery : [<code>Query</code>](#Query) \| <code>Promise.&lt;Result&gt;</code>
@@ -1422,15 +1587,6 @@ docker run -d -p 1433:1433 rhino:test
 ```
 
 When run using the command above, the docker server will be accessible on localhost port 1433.
-*Please note: the container must build the test database after running, this may take 1-5 minutes.*
-
-View the logs using the container id (which can be found also with `docker ps`).
-```
-docker logs [container-id]
-```
-
-When the server is ready, you should see the "Done installing test database. Server is ready." message in the logs.
-
 
 ### 3. Setup testing environment.
 Configure a `.env` file in the root project folder and define the variables for connecting:

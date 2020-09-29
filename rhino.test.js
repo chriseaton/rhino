@@ -185,7 +185,7 @@ describe('#query', () => {
             db.destroy();
         });
     });
-    describe('bulk-load', () => {
+    describe('batch', () => {
         let db = null;
         beforeAll(() => {
             db = rhino.create({
@@ -197,7 +197,7 @@ describe('#query', () => {
         afterAll(() => {
             db.destroy();
         });
-        test('bulk-loads a large script from memory.', async () => {
+        test('batches a large script from memory.', async () => {
             let data = fs.readFileSync(path.resolve(__dirname, 'test/bulk-load.sql'));
             let q = db.query(data.toString('utf8'));
             expect(q.mode).toBe(Query.MODE.BATCH);
@@ -208,6 +208,31 @@ describe('#query', () => {
             expect(r.rows[0][0]).toBe(100);
         });
     });
+});
+
+describe('#bulk', () => {
+    /** @type {rhino} */
+    let db = null;
+    beforeAll(() => {
+        db = rhino.create({
+            options: {
+                useColumnNames: false
+            }
+        });
+    });
+    afterAll(() => {
+        db.destroy();
+    });
+    test('performs a bulk load of rows into a table.', async () => {
+        let bk = db.bulk('dbo.Theme', { timeout: 1 });
+        await bk.column('Name', Query.TYPE.VarChar, { nullable: false, length: 512 });
+        await bk.column('HexCode', Query.TYPE.VarChar, { nullable: false, length: 512 });
+        for (let x = 0; x < 1000; x++) {
+            bk.add({ Name: `name${x}`, HexCode: `#000${x}${x}${x}` });
+        }
+        let result = await bk.execute();
+        expect(result).toBe(1000);
+    }, 5000);
 });
 
 describe('#transaction', () => {

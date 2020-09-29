@@ -2,6 +2,7 @@ const tarn = require('tarn');
 const Log = require('./log.js');
 const Connection = require('./connection.js');
 const ConnectedQuery = require('./connected-query.js');
+const BulkQuery = require('./bulk-query.js');
 const Transaction = require('./transaction.js');
 const Result = require('./result.js');
 
@@ -189,6 +190,16 @@ class Rhino {
     }
 
     /**
+     * Creates a new bulk-loading query that can be used to rapidly insert large amounts of data.
+     * @param {String} tableName - The name of the table to perform the bulk insert.
+     * @param {BulkQuery.Options} options - Options to pass to the bulk query.
+     * @returns {BulkQuery}
+     */
+    bulk(tableName, options) {
+        return new BulkQuery(tableName, options, this._pool);
+    }
+
+    /**
      * This function creates a new `Rhino` instance to act as a pool for executing database queries. You can create
      * multiple `Rhino` instances to manage multiple pools of connections or for different databases.
      * 
@@ -230,7 +241,9 @@ class Rhino {
         dc.options = {
             port: process.env.RHINO_MSSQL_PORT || 1433,
             encrypt: process.env.RHINO_MSSQL_ENCRYPT || false,
-            connectionRetries: 3
+            connectionRetries: 3,
+            trustServerCertificate: process.env.RHINO_MSSQL_TRUST_CERT || false,
+            validateBulkLoadParameters: true
         };
         if (process.env.RHINO_MSSQL_INSTANCE || process.env.RHINO_MSSQL_INSTANCE_NAME) {
             dc.options.instanceName = process.env.RHINO_MSSQL_INSTANCE || process.env.RHINO_MSSQL_INSTANCE_NAME;

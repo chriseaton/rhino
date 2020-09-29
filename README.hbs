@@ -26,6 +26,7 @@ Rhino is a solid choice because...
   - [x] Batch SQL queries returning multiple result-sets.
   - [x] Stored procedure execution with parameters.
   - [x] Stored procedures returning multiple result-sets.
+  - [x] Bulk loads.
 - [x] Single-Level transactions.
 - [x] Transaction save-point support.
 - [ ] Nested transactions. 
@@ -114,6 +115,17 @@ try {
     console.info('Transaction rolled back to save-point.');
     throw err;
 }
+```
+```js
+// run a bulk-load
+let bulk = db.bulk('dbo.Theme', { timeout: 10000 });
+await bk.column('Name', Query.TYPE.VarChar, { nullable: false, length: 512 });
+await bk.column('HexCode', Query.TYPE.VarChar, { nullable: false, length: 512 });
+for (let x = 0; x < 1000; x++) {
+    //add rows
+    bk.add({ Name: `name${x}`, HexCode: `#000${x}${x}${x}` });
+}
+let result = await bk.execute();
 ```
 ```js
 ...
