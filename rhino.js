@@ -5,6 +5,7 @@ const ConnectedQuery = require('./connected-query.js');
 const BulkQuery = require('./bulk-query.js');
 const Transaction = require('./transaction.js');
 const Result = require('./result.js');
+const Query = require('./query.js');
 
 /**
  * Please refer to:  {@link https://github.com/Vincit/tarn.js|Tarn on GitHub}
@@ -281,5 +282,7 @@ class Rhino {
     }
 
 }
+
+Rhino.Types = Query.TYPE;
 
 module.exports = Rhino;
