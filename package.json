@@ -1,6 +1,6 @@
 {
     "name": "rhino",
-    "version": "5.3.1",
+    "version": "5.3.2",
     "description": "Rhino is a production-focused Microsoft SQL Server driver for Node.JS.",
     "main": "rhino.js",
     "engines": {
