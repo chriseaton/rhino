@@ -41,6 +41,14 @@ describe('#sql', () => {
         q.sql('SELECT 1\nGO\nSELECT 2');
         expect(q.mode).toBe(Query.MODE.BATCH);
     });
+    test('Removes the EXEC from an sproc call.', () => {
+        let c = new Query();
+        expect(c.sql('EXEC sp_123').statement).toBe('sp_123');
+        expect(c.sql('EXEC dbo.sp_123').statement).toBe('dbo.sp_123');
+        //negative test
+        expect(c.sql('EXEC.dbo.sp_123').mode).toBe(Query.MODE.QUERY);
+        expect(c.sql('EXEC.dbo.sp_123').statement).toBe('EXEC.dbo.sp_123');
+    });
     test('returns the Query instance.', () => {
         let c = new Query();
         expect(c.sql('EXEC sp_123')).toBe(c);

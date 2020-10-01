@@ -168,8 +168,9 @@ class Query {
         } else if (typeof statement != 'string') {
             throw new Error('The parameter "statement" argument must be a string type.');
         }
-        if (statement.match(/^[\s;]*EXEC/i)) {
+        if (statement.match(/^[\s;]*EXE(?:C|CUTE)?\s/i)) {
             this.mode = Query.MODE.EXEC;
+            statement = statement.match(/^[\s;]*EXE(?:C|CUTE)?\s(.+)/i)[1]; //extract non-exec statement of stored procedure name.
         } else if (this.params.size === 0 && !!statement.match(/([^"']|"|'[^"']*["'])*?(;|\s\bGO\b)\s*\S/)) {
             this.mode = Query.MODE.BATCH;
         } else {
