@@ -9,7 +9,8 @@
     "scripts": {
         "test": "./node_modules/jest/bin/jest.js",
         "lint": "./node_modules/.bin/eslint ./",
-        "doc": "./node_modules/jsdoc-to-markdown/bin/cli.js --template README.hbs > ./README.md"
+        "doc": "./node_modules/jsdoc-to-markdown/bin/cli.js --template README.hbs > ./README.md",
+        "docs": "npm run doc"
     },
     "repository": {
         "type": "git",

@@ -11,25 +11,17 @@ describe('Multiple Connection instances.', () => {
             connections.push(new Connection(rhino.defaultConfig()));
             promises.push(connections[x].connect());
         }
-        try {
-            await Promise.all(promises);
-            for (let c of connections) {
-                expect(c.connected).toBe(true);
-            }
-            promises.length = 0;
-        } catch (err) {
-            throw err;
+        await Promise.all(promises);
+        for (let c of connections) {
+            expect(c.connected).toBe(true);
         }
+        promises.length = 0;
         for (let c of connections) {
             promises.push(c.disconnect());
         }
-        try {
-            await Promise.all(promises);
-            for (let c of connections) {
-                expect(c.connected).toBe(false);
-            }
-        } catch (err) {
-            throw err;
+        await Promise.all(promises);
+        for (let c of connections) {
+            expect(c.connected).toBe(false);
         }
     }, 1 * 60 * 1000);
     test('Handles connection storm of randomized connects/disconnects (100 instances, 200 iterations).', async () => {

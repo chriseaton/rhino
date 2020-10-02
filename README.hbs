@@ -26,12 +26,11 @@ Rhino is a solid choice because...
   - [x] Batch SQL queries returning multiple result-sets.
   - [x] Stored procedure execution with parameters.
   - [x] Stored procedures returning multiple result-sets.
-  - [x] Bulk loads.
+- [x] Bulk loads.
 - [x] Single-Level transactions.
 - [x] Transaction save-point support.
 - [ ] Nested transactions. 
 - [ ] Streaming query results.
-- [ ] Streaming bulk load.
 
 ## Installation
 
@@ -141,38 +140,34 @@ db.destroy();
 # Project Maintenance
 
 ## Unit Testing
-Unit-testing this driver requires a Microsoft SQL Server instance.
+Unit-testing this driver requires a Microsoft SQL Server instance running in docker from the `chriseaton/adventureworks` image.
 Due to the fragile nature of the database unit-testing, and to avoid collisions with other users, it's recommended
 to use the process described below ([docker](https://www.docker.com/products/docker-engine) is required).
 
-### 1. Build the image.
-To get started, build our testing docker image:
-```
-docker build ./test --build-arg SA_PASSWORD="YourStr0ng_PasswordHERE" -t rhino:test
-```
-
-### 2. Run the container.
-You need to run the `rhino:test` container from the built image. This will spin up the server and run the install 
+### 1. Run the container.
+You need to run the `chriseaton/adventureworks` container from the built image. This will spin up the server and run the install 
 script. It is usually ideal to run the container in daemon mode (`-d`), as the container will stay alive until stopped.
 
 ```
-docker run -d -p 1433:1433 rhino:test
+docker run -p 1433:1433 -e 'ACCEPT_EULA=Y' -e 'SA_PASSWORD=YourStr0ng_PasswordHERE' --name rhino_test -d chriseaton/adventureworks:latest
 ```
 
 When run using the command above, the docker server will be accessible on localhost port 1433.
 
-### 3. Setup testing environment.
+### 2. Setup testing environment.
 Configure a `.env` file in the root project folder and define the variables for connecting:
 ```
 RHINO_MSSQL_HOST = localhost
 RHINO_MSSQL_USER = sa
-RHINO_MSSQL_PASSWORD = 
+RHINO_MSSQL_PASSWORD = YourStr0ng_PasswordHERE
 RHINO_MSSQL_DATABASE = Rhino_Test
 ```
 
-You should repleace the `RHINO_MSSQL_PASSWORD` password with your own uniquely generated strong password.
+You should repleace the `RHINO_MSSQL_PASSWORD` password with your own uniquely generated strong password used in the `docker run` command from step 1.
 
-### 4. Run tests.
+### 3. Run tests.
+If you just executed the `docker run` command in step 1, you may need to wait a few seconds for the container to finish loading.
+> You can check if loading is complete when the `docker logs rhino_test | grep 'Server is ready.'` returns a ready message.
 Now that the test database server is up and running, you can run the Rhino unit-tests:
 
 ```
@@ -184,12 +179,12 @@ You can view the container logs to see the output from the server, including any
 
 ##### Show the running containers:
 ```
-docker container ls
+docker ls
 ```
 
 ##### Show the output from a container:
 ```
-docker container logs {container ID or Name here}
+docker logs {container ID or Name here}
 ```
 
 ## Updating the API/Readme
