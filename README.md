@@ -1579,7 +1579,10 @@ script. It is usually ideal to run the container in daemon mode (`-d`), as the c
 docker run -p 1433:1433 -e 'ACCEPT_EULA=Y' -e 'SA_PASSWORD=YourStr0ng_PasswordHERE' --name rhino_test -d chriseaton/adventureworks:latest
 ```
 
-When run using the command above, the docker server will be accessible on localhost port 1433.
+When run using the command above, the docker server will be accessible on localhost port 1433. To kill the container, run:
+```
+docker rm -f rhino_test
+```
 
 ### 2. Setup testing environment.
 Configure a `.env` file in the root project folder and define the variables for connecting:
@@ -1587,7 +1590,7 @@ Configure a `.env` file in the root project folder and define the variables for 
 RHINO_MSSQL_HOST = localhost
 RHINO_MSSQL_USER = sa
 RHINO_MSSQL_PASSWORD = YourStr0ng_PasswordHERE
-RHINO_MSSQL_DATABASE = Rhino_Test
+RHINO_MSSQL_DATABASE = AdventureWorks
 ```
 
 You should repleace the `RHINO_MSSQL_PASSWORD` password with your own uniquely generated strong password used in the `docker run` command from step 1.
