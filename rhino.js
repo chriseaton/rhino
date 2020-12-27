@@ -240,7 +240,6 @@ class Rhino {
         }
         //build options
         dc.options = {
-            port: process.env.RHINO_MSSQL_PORT || 1433,
             encrypt: process.env.RHINO_MSSQL_ENCRYPT || false,
             connectionRetries: 3,
             trustServerCertificate: process.env.RHINO_MSSQL_TRUST_CERT || false,
@@ -249,6 +248,10 @@ class Rhino {
         if (process.env.RHINO_MSSQL_INSTANCE || process.env.RHINO_MSSQL_INSTANCE_NAME) {
             dc.options.instanceName = process.env.RHINO_MSSQL_INSTANCE || process.env.RHINO_MSSQL_INSTANCE_NAME;
         }
+        //only use a port when the instance name is not present or explicity defined.
+        if (!dc.options.instanceName || process.env.RHINO_MSSQL_PORT) { 
+            dc.options.port = process.env.RHINO_MSSQL_PORT || 1433;
+        } 
         if (process.env.RHINO_MSSQL_DATABASE) {
             dc.options.database = process.env.RHINO_MSSQL_DATABASE;
         }
