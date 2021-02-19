@@ -254,6 +254,9 @@ class Query {
             //convert a value of undefined to null
             if (typeof v === 'undefined') {
                 v = null;
+            } else if (typeof v !== 'undefined' && v && v.type) {
+                type = v.type;
+                v = v.value;
             }
             //reset mode if necessary 
             if (this.mode === Query.MODE.BATCH) {
