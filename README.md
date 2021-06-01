@@ -16,6 +16,10 @@ Rhino is a solid choice because...
 - Manages connections for you using an internal pool, stop worrying and query!
 - Open-source and accepting pull requests.
 
+## Is this project alive?
+Yep! Absolutely (I keep a tab on it) - the code is *__solid__*, so it doesn't need many updates!    
+If you have an issue or feedback, [just log it](/issues)!
+
 # Feature list
 - [x] Automatic connection management.
 - [x] Query execution:
