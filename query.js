@@ -107,7 +107,7 @@ class Query {
     _detectType(value) {
         let vt = typeof value;
         if (vt === 'undefined' || value === null) {
-            return TDS_TYPES.Null;
+            return TDS_TYPES.VarChar;
         } else if (vt === 'string') {
             if (UnicodeRegEx.test(value)) {
                 return TDS_TYPES.NVarChar;
