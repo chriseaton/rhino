@@ -224,7 +224,7 @@ describe('#bulk', () => {
         db.destroy();
     });
     test('performs a bulk load of rows into a table.', async () => {
-        let bk = db.bulk('dbo.Theme', { timeout: 1 });
+        let bk = db.bulk('Theme', { timeout: 5000 });
         await bk.column('Name', Query.TYPE.VarChar, { nullable: false, length: 512 });
         await bk.column('HexCode', Query.TYPE.VarChar, { nullable: false, length: 512 });
         for (let x = 0; x < 1000; x++) {

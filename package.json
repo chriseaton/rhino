@@ -35,7 +35,7 @@
     "homepage": "https://github.com/chriseaton/rhino#readme",
     "dependencies": {
         "tarn": "^2.0.0",
-        "tedious": "^9.2.1"
+        "tedious": "^11.2.0"
     },
     "devDependencies": {
         "dotenv": "^10.0.0",

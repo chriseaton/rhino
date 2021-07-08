@@ -102,8 +102,8 @@ describe('#in', () => {
     });
     test('detects proper auto-detectable types.', () => {
         let c = new Query();
-        expect(c.in('test1', null).params.get('test1').type).toBe(Query.TYPE.Int);
-        expect(c.in('test2').params.get('test2').type).toBe(Query.TYPE.Int);
+        expect(c.in('test1', null).params.get('test1').type).toBe(Query.TYPE.Null);
+        expect(c.in('test2').params.get('test2').type).toBe(Query.TYPE.Null);
         expect(c.in('test3', '').params.get('test3').type).toBe(Query.TYPE.VarChar);
         expect(c.in('test4', 'abc').params.get('test4').type).toBe(Query.TYPE.VarChar);
         expect(c.in('test5', '(╯°□°）╯︵ ┻━┻').params.get('test5').type).toBe(Query.TYPE.NVarChar);
