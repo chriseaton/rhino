@@ -57,6 +57,8 @@ class BulkQuery {
         this.state = {
             /** @param {TDS_BulkLoad} */
             bulk: null,
+            /** @param {Array} */
+            rows: [],
             /** @type {Promise.<Number>} */
             done: null,
             /** @type {Connection} */
@@ -104,7 +106,7 @@ class BulkQuery {
      * Fire and complete the bulk-load.
      */
     async execute() {
-        this.state.connection._tdsConnection.execBulkLoad(this.state.bulk);
+        this.state.connection._tdsConnection.execBulkLoad(this.state.bulk, this.state.rows);
         return await this.state.done;
     }
 
@@ -123,14 +125,29 @@ class BulkQuery {
 
     /**
      * Adds a row to the bulk query.
-     * @param {Array|Object} row - The row object or array. If an object it should have key/value pairs representing 
+     * 
+     * Any `row` argument that is `null` or `undefined` is ignored (skipped).
+     * @throws Error when the row is non-null, non-undefined, and not an object.
+     * @param {...Object} rows - A spread of row objects. If an object it should have key/value pairs representing 
      * column name and value. If an array then it should represent the values of each column in the same order which 
      * they were added to the `BulkQuery` object.
      * @returns {BulkQuery}
      */
-    async add(row) {
-        await this.aquire();
-        this.state.bulk.addRow(row);
+    async add(...rows) {
+        if (rows && rows.length) {
+            await this.aquire();
+            for (let i = 0; i < rows.length; i++) {
+                let row = rows[i];
+                let rtype = typeof row;
+                if (row === null || rtype === 'undefined') {
+                    continue;
+                } else if (rtype === 'object') {
+                    this.state.rows.push(row);
+                } else {
+                    throw new Error(`Invalid row in bulk-query rows argument at index ${i}. Row must be an object, but instead found "${rtype}".`);
+                }
+            }
+        }
         return this;
     }
 

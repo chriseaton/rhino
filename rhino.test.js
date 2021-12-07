@@ -220,8 +220,8 @@ describe('#bulk', () => {
             }
         });
     });
-    afterAll(() => {
-        db.destroy();
+    afterAll(async () => {
+        await db.destroy();
     });
     test('performs a bulk load of rows into a table.', async () => {
         let bk = db.bulk('Theme', { timeout: 5000 });
@@ -230,9 +230,18 @@ describe('#bulk', () => {
         for (let x = 0; x < 1000; x++) {
             bk.add({ Name: `name${x}`, HexCode: `#000${x}${x}${x}` });
         }
+        //add null and undefined rows (should be skipped).
+        bk.add(null);
+        bk.add(undefined);
         let result = await bk.execute();
         expect(result).toBe(1000);
     }, 5000);
+    test('ensures that rows are objects.', async () => {
+        let bk = db.bulk('Theme');
+        await expect(bk.add(123)).rejects.toThrow();
+        await expect(bk.add(true)).rejects.toThrow();
+        await expect(bk.add('hello')).rejects.toThrow();
+    });
 });
 
 describe('#transaction', () => {

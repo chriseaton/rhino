@@ -85,15 +85,17 @@ class Rhino {
      * Destroys internal pooled resources in this instance. This is called automatically when the process exits.
      * @param {Function} [done] - Callback function when the destruction is complete.
      */
-    destroy(done) {
+    async destroy(done) {
         if (this._pool) {
-            let self = this;
-            this._pool.destroy().then(() => {
-                let m = self;
-                if (done) {
-                    done();
+            if (this._pool && this._pool.used && this._pool.used.length) {
+                for (let r of this._pool.used) {
+                    await this._destroyResource(r.resource);
                 }
-            });
+            }
+            this._pool.destroy();
+            if (done) {
+                done();
+            }
         } else if (done) {
             done();
         }
@@ -140,7 +142,7 @@ class Rhino {
     async _destroyResource(resource) {
         this.log.debug('Pool destroying resource...');
         if (resource) {
-            resource.disconnect();
+            await resource.disconnect();
         }
     }
 
@@ -249,9 +251,9 @@ class Rhino {
             dc.options.instanceName = process.env.RHINO_MSSQL_INSTANCE || process.env.RHINO_MSSQL_INSTANCE_NAME;
         }
         //only use a port when the instance name is not present or explicity defined.
-        if (!dc.options.instanceName || process.env.RHINO_MSSQL_PORT) { 
+        if (!dc.options.instanceName || process.env.RHINO_MSSQL_PORT) {
             dc.options.port = process.env.RHINO_MSSQL_PORT || 1433;
-        } 
+        }
         if (process.env.RHINO_MSSQL_DATABASE) {
             dc.options.database = process.env.RHINO_MSSQL_DATABASE;
         }

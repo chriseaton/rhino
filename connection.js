@@ -133,7 +133,7 @@ class Connection extends EventEmitter {
      */
     get connected() {
         if (this._tdsConnection) {
-            return (this._tdsConnection.closed === false && this._tdsConnection.loggedIn);
+            return (this._tdsConnection.closed === false && this._tdsConnection.state.name === 'LoggedIn');
         }
         return false;
     }

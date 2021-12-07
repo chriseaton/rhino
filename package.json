@@ -35,14 +35,15 @@
     "homepage": "https://github.com/chriseaton/rhino#readme",
     "dependencies": {
         "tarn": "^2.0.0",
-        "tedious": "^11.2.0"
+        "tedious": "^14.0.0"
     },
     "devDependencies": {
+        "@types/jest": "^27.0.3",
         "dotenv": "^10.0.0",
-        "eslint": "^7.27.0",
-        "eslint-plugin-jest": "^24.3.6",
-        "jest": "^27.0.3",
-        "jsdoc-to-markdown": "^7.0.1"
+        "eslint": "^8.4.1",
+        "eslint-plugin-jest": "^25.3.0",
+        "jest": "^27.4.3",
+        "jsdoc-to-markdown": "^7.1.0"
     },
     "jsdoc2md": {
         "files": "{,!(node_modules|test)/**/}*!(*.test|*.ignore).js",
