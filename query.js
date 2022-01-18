@@ -206,68 +206,114 @@ class Query {
     }
 
     /**
+     * Adds or updates a parameter for the query.    
+     * Calling this when the query `mode` is set to BATCH will reset the `mode` to QUERY.
+     * @throws Error if the `name` argument is falsey.
+     * @throws Error if the `name` argument is not a string.
+     * @throws Error if the `name` argument has already been specified or is not specified as a string.
+     * @throws Error if the `type` and `value` arguments are not specified or falsey when the direction is out.
+     * @param {String} name - The parameter name, can be specified with the '@' character or not.
+     * @param {String|Number|Date|Buffer|Object|*} [value=null] - The value of the parameter.
+     * @param {String|Query.TDSType} [type] - The explicit database type to use, if not specified, it is
+     * auto-determined.
+     * @param {Query.PARAM_DIR} [dir=Query.PARAM_DIR.IN] - The direction of the parameter.
+     * @param {*} [options] - Any additional `tedious` parameter options.
+     * @returns {Query}
+     */
+    param(name, value, type, dir = Query.PARAM_DIR.IN, options) {
+        //validate
+        if (!name) {
+            throw new Error('A parameter "name" argument is required.');
+        } else if (typeof name !== 'string') {
+            throw new Error('The "name" argument must be a String.');
+        } else if (dir === Query.PARAM_DIR.OUT && (typeof type === 'undefined' || type === null) && typeof value === 'undefined') {
+            throw new Error('The "type" or "value" arguments must be specified if the parameter direction is out.');
+        }
+        //strip an '@' from the name if specified.
+        if (name && name.length && name[0] === '@') {
+            name = name.substring(1);
+        }
+        if (typeof name !== 'string') {
+            throw new Error('A parameter "name" argument must be a string.');
+        }
+        //reset mode if necessary 
+        if (this.mode === Query.MODE.BATCH) {
+            this.mode = Query.MODE.QUERY;
+        }
+        //build the parameter object
+        let p = {
+            output: (dir === Query.PARAM_DIR.OUT),
+            type: (type ? this._getTDSType(type) : null),
+        };
+        if (dir === Query.PARAM_DIR.OUT) {
+            if (typeof value !== 'undefined') {
+                p.value = value;
+            }
+        } else {
+            p.value = (typeof value !== 'undefined' ? value : null);
+        }
+        //detect type if not already specified and a value is provided.
+        if (!p.type && typeof p.value !== 'undefined' && p.value !== null) {
+            p.type = this._detectType(value);
+        }
+        if (!p.type) {
+            p.type = Query.TYPE.VarChar; //fallback to varchar if undetermined.
+        }
+        //add the parameter
+        this.params.set(name, p);
+        return this;
+    }
+
+    /**
+     * @typedef SQLParameter
+     * @param {*} value 
+     * @param {Query.TDSType} type 
+     * @param {{length: Number, precision: Number, scale: Number}} options 
+     * @returns 
+     */
+
+    /**
      * Adds an input parameter to the query.    
      * Calling this when the query `mode` is set to BATCH will reset the `mode` to QUERY.
      * @throws Error if the `name` argument is falsey.
      * @throws Error if the `name` argument is not a string.
      * @throws Error if the `name` argument has already been specified or is not specified as a string.
-     * @param {String|Map.<String,*>|Object} name - The parameter name, can be specified with the '@' character or not.
-     * If a `Map` or `Object` is specified - it's keys or property names are used as the parameter name, and the
-     * value(s) as the parameter values.
-     * @param {String|Query.TDSType} [type] - The explicit database type to use, if not specified, it is auto-determined. This parameter
-     * can be omitted.
+     * @param {String|Map.<String,SQLParameter>|Array.<SQLParameter>|Object} name - A number of options for 
+     * specifying the parameter, either giving the name, or giving a Map, Array, or object.    
+     * If a Map, Array or object is specified, the other arguments are ignored.
      * @param {String|Number|Date|Buffer|Object|*} [value=null] - The value of the parameter.
+     * @param {String|Query.TDSType} [type] - The explicit database type to use, if not specified, it is 
+     * auto-determined.
+     * @param {*} [options] - Any additional `tedious` parameter options.
      * @returns {Query}
      */
-    in(name, type, value) {
-        //validate
-        if (!name) {
-            throw new Error('A parameter "name" argument is required.');
-        }
-        //check if the type has been ommitted.
-        if (arguments.length === 2 && !(type && type.id && type.name && type.type)) {
-            value = type;
-            type = null;
-        }
-        //extract
-        let m = null;
-        if (typeof name === 'string') {
-            m = new Map();
-            m.set(name, value);
-        } else if (name instanceof Map) {
-            m = name;
+    in(name, value, type, options) {
+        if (arguments.length === 1) {
+            if (Array.isArray(name)) {
+                for (let p of name) {
+                    this.param(p.name, p.value, p.type, Query.PARAM_DIR.IN, p.options);
+                }
+            } else if (name instanceof Map) {
+                for (let [k, v] of name) {
+                    if (typeof v === 'object') {
+                        this.param(k, v.value, v.type, Query.PARAM_DIR.IN, v.options);
+                    } else {
+                        this.param(k, v, null, Query.PARAM_DIR.IN);
+                    }
+                }
+            } else if (typeof name === 'object') {
+                for (let p in name) {
+                    if (typeof name[p] === 'object') {
+                        this.param(p, name[p].value, name[p].type, Query.PARAM_DIR.IN, name[p].options);
+                    } else {
+                        this.param(p, name[p], null, Query.PARAM_DIR.IN);
+                    }
+                }
+            } else {
+                throw new Error('Invalid "name" argument, the value of "name" must be an Object, Array, or Map when no other arguments are specified.');
+            }
         } else {
-            m = new Map(Object.entries(name));
-        }
-        //process params
-        for (let [k, v] of m) {
-            let n = k;
-            //strip an '@' from the name if specified.
-            if (n && n.length && n[0] === '@') {
-                n = n.substr(1);
-            }
-            if (typeof n !== 'string') {
-                throw new Error('A parameter "name" argument must be a string.');
-            } else if (this.params.has(n)) {
-                throw new Error(`The parameter "name" argument "${n}" already exists in the query's parameter map.`);
-            }
-            //convert a value of undefined to null
-            if (typeof v === 'undefined') {
-                v = null;
-            } else if (typeof v !== 'undefined' && v && v.type) {
-                type = v.type;
-                v = v.value;
-            }
-            //reset mode if necessary 
-            if (this.mode === Query.MODE.BATCH) {
-                this.mode = Query.MODE.QUERY;
-            }
-            //add the parameter
-            this.params.set(n, {
-                output: false,
-                type: (type ? this._getTDSType(type) : this._detectType(v)),
-                value: v
-            });
+            this.param(name, value, type, Query.PARAM_DIR.IN, options);
         }
         return this;
     }
@@ -276,51 +322,44 @@ class Query {
      * Adds an output parameter to the query.    
      * Calling this when the query `mode` is set to BATCH will reset the `mode` to QUERY.
      * @throws Error if the `name` argument is falsey.
-     * @throws Error if the `name` is a `Map` and a key is not a `String`.
-     * @throws Error if the `name` argument has already been specified.
-     * @throws Error if the `type` argument is falsey.
-     * @param {String|Map.<String,*>|Object} name - The parameter name, can be specified with the '@' character or not.
-     * If a `Map` or `Object` is specified - it's keys or property names are used as the parameter name, and the
-     * values(s) are ignored.
-     * @param {*} type - The explicit database type to use. Must be specified on out parameters.
+     * @throws Error if the `name` argument is not a string.
+     * @throws Error if the `name` argument has already been specified or is not specified as a string.
+     * @param {String|Map.<String,SQLParameter>|Array.<SQLParameter>|SQLParameter} name - A number of options for 
+     * specifying the parameter, either giving the name, or giving a Map, Array, or single instance of 
+     * the SQLParameter object. If a Map, Array or SQLParameter is specified, the other arguments are ignored.
+     * @param {String|Number|Date|Buffer|Object|*} [value] - The value of the parameter.
+     * @param {String|Query.TDSType} [type] - The explicit database type to use, if not specified, it is 
+     * auto-determined.
+     * @param {*} [options] - Any additional `tedious` parameter options.
      * @returns {Query}
      */
-    out(name, type) {
-        //validate
-        if (!name) {
-            throw new Error('A parameter "name" argument is required.');
-        }
-        //extract
-        let names = null;
-        if (typeof name === 'string') {
-            names = [name];
-        } else if (name instanceof Map) {
-            names = name.keys();
+    out(name, value, type, options) {
+        if (arguments.length === 1) {
+            if (Array.isArray(name)) {
+                for (let p of name) {
+                    this.param(p.name, p.value, p.type, Query.PARAM_DIR.OUT, p.options);
+                }
+            } else if (name instanceof Map) {
+                for (let [k, v] of name) {
+                    if (typeof v === 'object') {
+                        this.param(k, v.value, v.type, Query.PARAM_DIR.OUT, v.options);
+                    } else {
+                        this.param(k, v, null, Query.PARAM_DIR.OUT);
+                    }
+                }
+            } else if (typeof name === 'object') {
+                for (let p in name) {
+                    if (typeof name[p] === 'object') {
+                        this.param(p, name[p].value, name[p].type, Query.PARAM_DIR.OUT, name[p].options);
+                    } else {
+                        this.param(p, name[p], null, Query.PARAM_DIR.OUT);
+                    }
+                }
+            } else {
+                throw new Error('Invalid "name" argument, the value of "name" must be an Object, Array, or Map when no other arguments are specified.');
+            }
         } else {
-            names = Object.keys(name);
-        }
-        //process params
-        for (let n of names) {
-            //strip an '@' from the name if specified.
-            if (n && n.length && n[0] === '@') {
-                n = n.substr(1);
-            }
-            if (typeof n !== 'string') {
-                throw new Error('A parameter "name" argument must be a string.');
-            } else if (this.params.has(n)) {
-                throw new Error(`The parameter "name" argument "${n}" already exists in the query's parameter map.`);
-            } else if (!type) {
-                throw new Error('A parameter "type" argument is required.');
-            }
-            //reset mode if necessary 
-            if (this.mode === Query.MODE.BATCH) {
-                this.mode = Query.MODE.QUERY;
-            }
-            //add the parameter
-            this.params.set(n, {
-                output: true,
-                type: this._getTDSType(type)
-            });
+            this.param(name, value, type, Query.PARAM_DIR.OUT, options);
         }
         return this;
     }
@@ -355,7 +394,17 @@ class Query {
 }
 
 /**
+ * The parameter direction. Defaults to 'IN'.
+ * @enum {String}
+ */
+Query.PARAM_DIR = {
+    IN: 'in',
+    OUT: 'out'
+};
+
+/**
  * The mode that determines how the query should be executed.
+ * @enum {Number}
  */
 Query.MODE = {
     /** 

@@ -135,6 +135,17 @@ class ConnectedQuery extends Query {
                     context.results.push(new Result());
                 }
             };
+            let returnValueHandler = (parameterName, value, metadata) => {
+                let res = context.results[context.results.length - 1];
+                res.columns.push(Object.assign({
+                    name: parameterName,
+                    parameter: true
+                }, metadata));
+                if (res.rows.length === 0) {
+                    res.rows.push([]);
+                }
+                res.rows[0].push(value);
+            };
             let inExecDoneHandler = (rowCount, more) => {
                 let res = context.results[context.results.length - 1];
                 //only move to a new result if the last result was used - ignore if it was just an empty token.
@@ -165,6 +176,7 @@ class ConnectedQuery extends Query {
             context.tracker.registerOn(context.req, 'error', errorHandler);
             context.tracker.registerOn(context.req, 'columnMetadata', colHandler);
             context.tracker.registerOn(context.req, 'row', rowHandler);
+            context.tracker.registerOn(context.req, 'returnValue', returnValueHandler);
             context.tracker.registerOn(context.req, 'done', statementDoneHandler);
             context.tracker.registerOn(context.req, 'doneInProc', inExecDoneHandler);
             context.tracker.registerOn(context.req, 'doneProc', execDoneHandler);

@@ -160,6 +160,23 @@ describe('#query', () => {
             expect(r.rows[0][0]).toBe(1);
             db.destroy();
         });
+        test('runs a stored procedure that uses out parameters.', async () => {
+            let db = rhino.create({
+                options: {
+                    useColumnNames: false
+                }
+            });
+            let r = await db
+                .query('EXEC dbo.uspLogError')
+                .out('ErrorLogID', null, 'INT');
+            expect(r).toBeTruthy();
+            expect(r.rows.length).toBe(1);
+            expect(r.columns.length).toBe(1);
+            expect(r.columns[0].name).toBe('ErrorLogID');
+            expect(r.columns[0].parameter).toBe(true);
+            expect(r.rows[0][0]).not.toBeNull();
+            db.destroy();
+        });
         test('pool releases resources that are unused.', async () => {
             let db = rhino.create({
                 options: {
