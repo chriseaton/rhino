@@ -78,8 +78,8 @@ results = await db
             FROM contacts 
             WHERE name LIKE @firstName AND account = @number`)
     .in('firstName', 'John')
-    .in('account', Query.TYPE.INT, 23494893)
-    .out('valid', 'BIT');
+    .in('account', 23494893, Query.TYPE.INT)
+    .out('valid', undefined, 'BIT');
 console.log(`Count: ${results.count}`);
 console.table(results.rows);
 //use object parameters

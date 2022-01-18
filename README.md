@@ -16,10 +16,6 @@ Rhino is a solid choice because...
 - Manages connections for you using an internal pool, stop worrying and query!
 - Open-source and accepting pull requests.
 
-## Is this project alive?
-Yep! Absolutely (I keep a tab on it) - the code is *__solid__*, so it doesn't need many updates!    
-If you have an issue or feedback, [just log it](/issues)!
-
 # Feature list
 - [x] Automatic connection management.
 - [x] Query execution:
@@ -82,8 +78,8 @@ results = await db
             FROM contacts 
             WHERE name LIKE @firstName AND account = @number`)
     .in('firstName', 'John')
-    .in('account', Query.TYPE.INT, 23494893)
-    .out('valid', 'BIT');
+    .in('account', 23494893, Query.TYPE.INT)
+    .out('valid', undefined, 'BIT');
 console.log(`Count: ${results.count}`);
 console.table(results.rows);
 //use object parameters
@@ -184,6 +180,8 @@ a particular save-point.</p>
 <dd></dd>
 <dt><a href="#PromiseQuery">PromiseQuery</a> : <code><a href="#Query">Query</a></code> | <code>Promise.&lt;Result&gt;</code></dt>
 <dd></dd>
+<dt><a href="#SQLParameter">SQLParameter</a></dt>
+<dd></dd>
 <dt><a href="#QueryTypes">QueryTypes</a></dt>
 <dd></dd>
 </dl>
@@ -204,7 +202,7 @@ Provides promise extensions to a `BulkQuery` object and allows it to be executed
         * [.aquire()](#BulkQuery+aquire) ⇒ [<code>BulkQuery</code>](#BulkQuery)
         * [.execute()](#BulkQuery+execute)
         * [.column(name, type, options)](#BulkQuery+column) ⇒ [<code>BulkQuery</code>](#BulkQuery)
-        * [.add(row)](#BulkQuery+add) ⇒ [<code>BulkQuery</code>](#BulkQuery)
+        * [.add(...rows)](#BulkQuery+add) ⇒ [<code>BulkQuery</code>](#BulkQuery)
     * _static_
         * [.Options](#BulkQuery.Options)
 
@@ -286,14 +284,20 @@ Adds a column to the bulk query.
 
 <a name="BulkQuery+add"></a>
 
-### bulkQuery.add(row) ⇒ [<code>BulkQuery</code>](#BulkQuery)
+### bulkQuery.add(...rows) ⇒ [<code>BulkQuery</code>](#BulkQuery)
 Adds a row to the bulk query.
 
+Any `row` argument that is `null` or `undefined` is ignored (skipped).
+
 **Kind**: instance method of [<code>BulkQuery</code>](#BulkQuery)  
+**Throws**:
+
+- Error when the row is non-null, non-undefined, and not an object.
+
 
 | Param | Type | Description |
 | --- | --- | --- |
-| row | <code>Array</code> \| <code>Object</code> | The row object or array. If an object it should have key/value pairs representing  column name and value. If an array then it should represent the values of each column in the same order which  they were added to the `BulkQuery` object. |
+| ...rows | <code>Object</code> | A spread of row objects. If an object it should have key/value pairs representing  column name and value. If an array then it should represent the values of each column in the same order which  they were added to the `BulkQuery` object. |
 
 
 * * *
@@ -781,20 +785,19 @@ Wraps a SQL query and provides helper functions for managing parameters.
         * [.sql(statement, [params])](#Query+sql) ⇒ [<code>Query</code>](#Query)
         * [.batch()](#Query+batch) ⇒ [<code>Query</code>](#Query)
         * [.exec()](#Query+exec) ⇒ [<code>Query</code>](#Query)
-        * [.in(name, [type], [value])](#Query+in) ⇒ [<code>Query</code>](#Query)
-        * [.out(name, type)](#Query+out) ⇒ [<code>Query</code>](#Query)
+        * [.param(name, [value], [type], [dir], [options])](#Query+param) ⇒ [<code>Query</code>](#Query)
+        * [.in(name, [value], [type], [options])](#Query+in) ⇒ [<code>Query</code>](#Query)
+        * [.out(name, [value], [type], [options])](#Query+out) ⇒ [<code>Query</code>](#Query)
         * [.remove(name)](#Query+remove) ⇒ <code>Boolean</code>
         * [.clear()](#Query+clear)
     * _static_
-        * [.MODE](#Query.MODE)
-            * [.QUERY](#Query.MODE.QUERY)
-            * [.BATCH](#Query.MODE.BATCH)
-            * [.EXEC](#Query.MODE.EXEC)
         * [.TYPE](#Query.TYPE) : [<code>QueryTypes</code>](#QueryTypes)
         * [.AUTODETECT_TYPES](#Query.AUTODETECT_TYPES)
             * [.FLOATING_POINT](#Query.AUTODETECT_TYPES.FLOATING_POINT)
             * [.DATE](#Query.AUTODETECT_TYPES.DATE)
             * [.BUFFER](#Query.AUTODETECT_TYPES.BUFFER)
+        * [.PARAM_DIR](#Query.PARAM_DIR) : <code>enum</code>
+        * [.MODE](#Query.MODE) : <code>enum</code>
         * [.TDSType](#Query.TDSType)
         * [.Parameter](#Query.Parameter)
 
@@ -921,9 +924,35 @@ Forces the query into EXEC `mode`.
 
 * * *
 
+<a name="Query+param"></a>
+
+### query.param(name, [value], [type], [dir], [options]) ⇒ [<code>Query</code>](#Query)
+Adds or updates a parameter for the query.    
+Calling this when the query `mode` is set to BATCH will reset the `mode` to QUERY.
+
+**Kind**: instance method of [<code>Query</code>](#Query)  
+**Throws**:
+
+- Error if the `name` argument is falsey.
+- Error if the `name` argument is not a string.
+- Error if the `name` argument has already been specified or is not specified as a string.
+- Error if the `type` and `value` arguments are not specified or falsey when the direction is out.
+
+
+| Param | Type | Default | Description |
+| --- | --- | --- | --- |
+| name | <code>String</code> |  | The parameter name, can be specified with the '@' character or not. |
+| [value] | <code>String</code> \| <code>Number</code> \| <code>Date</code> \| <code>Buffer</code> \| <code>Object</code> \| <code>\*</code> | <code></code> | The value of the parameter. |
+| [type] | <code>String</code> \| [<code>TDSType</code>](#Query.TDSType) |  | The explicit database type to use, if not specified, it is auto-determined. |
+| [dir] | [<code>PARAM\_DIR</code>](#Query.PARAM_DIR) | <code>Query.PARAM_DIR.IN</code> | The direction of the parameter. |
+| [options] | <code>\*</code> |  | Any additional `tedious` parameter options. |
+
+
+* * *
+
 <a name="Query+in"></a>
 
-### query.in(name, [type], [value]) ⇒ [<code>Query</code>](#Query)
+### query.in(name, [value], [type], [options]) ⇒ [<code>Query</code>](#Query)
 Adds an input parameter to the query.    
 Calling this when the query `mode` is set to BATCH will reset the `mode` to QUERY.
 
@@ -937,16 +966,17 @@ Calling this when the query `mode` is set to BATCH will reset the `mode` to QUER
 
 | Param | Type | Default | Description |
 | --- | --- | --- | --- |
-| name | <code>String</code> \| <code>Map.&lt;String, \*&gt;</code> \| <code>Object</code> |  | The parameter name, can be specified with the '@' character or not. If a `Map` or `Object` is specified - it's keys or property names are used as the parameter name, and the value(s) as the parameter values. |
-| [type] | <code>String</code> \| [<code>TDSType</code>](#Query.TDSType) |  | The explicit database type to use, if not specified, it is auto-determined. This parameter can be omitted. |
+| name | <code>String</code> \| <code>Map.&lt;String, SQLParameter&gt;</code> \| [<code>Array.&lt;SQLParameter&gt;</code>](#SQLParameter) \| <code>Object</code> |  | A number of options for  specifying the parameter, either giving the name, or giving a Map, Array, or object.     If a Map, Array or object is specified, the other arguments are ignored. |
 | [value] | <code>String</code> \| <code>Number</code> \| <code>Date</code> \| <code>Buffer</code> \| <code>Object</code> \| <code>\*</code> | <code></code> | The value of the parameter. |
+| [type] | <code>String</code> \| [<code>TDSType</code>](#Query.TDSType) |  | The explicit database type to use, if not specified, it is  auto-determined. |
+| [options] | <code>\*</code> |  | Any additional `tedious` parameter options. |
 
 
 * * *
 
 <a name="Query+out"></a>
 
-### query.out(name, type) ⇒ [<code>Query</code>](#Query)
+### query.out(name, [value], [type], [options]) ⇒ [<code>Query</code>](#Query)
 Adds an output parameter to the query.    
 Calling this when the query `mode` is set to BATCH will reset the `mode` to QUERY.
 
@@ -954,15 +984,16 @@ Calling this when the query `mode` is set to BATCH will reset the `mode` to QUER
 **Throws**:
 
 - Error if the `name` argument is falsey.
-- Error if the `name` is a `Map` and a key is not a `String`.
-- Error if the `name` argument has already been specified.
-- Error if the `type` argument is falsey.
+- Error if the `name` argument is not a string.
+- Error if the `name` argument has already been specified or is not specified as a string.
 
 
 | Param | Type | Description |
 | --- | --- | --- |
-| name | <code>String</code> \| <code>Map.&lt;String, \*&gt;</code> \| <code>Object</code> | The parameter name, can be specified with the '@' character or not. If a `Map` or `Object` is specified - it's keys or property names are used as the parameter name, and the values(s) are ignored. |
-| type | <code>\*</code> | The explicit database type to use. Must be specified on out parameters. |
+| name | <code>String</code> \| <code>Map.&lt;String, SQLParameter&gt;</code> \| [<code>Array.&lt;SQLParameter&gt;</code>](#SQLParameter) \| [<code>SQLParameter</code>](#SQLParameter) | A number of options for  specifying the parameter, either giving the name, or giving a Map, Array, or single instance of  the SQLParameter object. If a Map, Array or SQLParameter is specified, the other arguments are ignored. |
+| [value] | <code>String</code> \| <code>Number</code> \| <code>Date</code> \| <code>Buffer</code> \| <code>Object</code> \| <code>\*</code> | The value of the parameter. |
+| [type] | <code>String</code> \| [<code>TDSType</code>](#Query.TDSType) | The explicit database type to use, if not specified, it is  auto-determined. |
+| [options] | <code>\*</code> | Any additional `tedious` parameter options. |
 
 
 * * *
@@ -995,50 +1026,6 @@ Clears all query criteria, including SQL statement values and parameters. The `Q
 to a blank slate.
 
 **Kind**: instance method of [<code>Query</code>](#Query)  
-
-* * *
-
-<a name="Query.MODE"></a>
-
-### Query.MODE
-The mode that determines how the query should be executed.
-
-**Kind**: static property of [<code>Query</code>](#Query)  
-
-* [.MODE](#Query.MODE)
-    * [.QUERY](#Query.MODE.QUERY)
-    * [.BATCH](#Query.MODE.BATCH)
-    * [.EXEC](#Query.MODE.EXEC)
-
-
-* * *
-
-<a name="Query.MODE.QUERY"></a>
-
-#### MODE.QUERY
-Indicates the query should be run using the `execSql` function. This is the most common mode that supports 
-parameters.
-
-**Kind**: static property of [<code>MODE</code>](#Query.MODE)  
-
-* * *
-
-<a name="Query.MODE.BATCH"></a>
-
-#### MODE.BATCH
-This mode indicates the query should run using the `execSqlBatch` function. This mode does not support
-parameters and is meant for multi-statement queries.
-
-**Kind**: static property of [<code>MODE</code>](#Query.MODE)  
-
-* * *
-
-<a name="Query.MODE.EXEC"></a>
-
-#### MODE.EXEC
-This mode indicates the query is a stored procedure call, and is executed using the `callProcedure` function.
-
-**Kind**: static property of [<code>MODE</code>](#Query.MODE)  
 
 * * *
 
@@ -1094,6 +1081,39 @@ The TDS type used when a Buffer object value is detected.
 Defaults to `VarBinary`.
 
 **Kind**: static property of [<code>AUTODETECT\_TYPES</code>](#Query.AUTODETECT_TYPES)  
+
+* * *
+
+<a name="Query.PARAM_DIR"></a>
+
+### Query.PARAM\_DIR : <code>enum</code>
+The parameter direction. Defaults to 'IN'.
+
+**Kind**: static enum of [<code>Query</code>](#Query)  
+**Properties**
+
+| Name | Type | Default |
+| --- | --- | --- |
+| IN | <code>String</code> | <code>in</code> | 
+| OUT | <code>String</code> | <code>out</code> | 
+
+
+* * *
+
+<a name="Query.MODE"></a>
+
+### Query.MODE : <code>enum</code>
+The mode that determines how the query should be executed.
+
+**Kind**: static enum of [<code>Query</code>](#Query)  
+**Properties**
+
+| Name | Type | Default | Description |
+| --- | --- | --- | --- |
+| QUERY | <code>Number</code> | <code>0</code> | Indicates the query should be run using the `execSql` function. This is the most common mode that supports  parameters. |
+| BATCH | <code>Number</code> | <code>1</code> | This mode indicates the query should run using the `execSqlBatch` function. This mode does not support parameters and is meant for multi-statement queries. |
+| EXEC | <code>Number</code> | <code>2</code> | This mode indicates the query is a stored procedure call, and is executed using the `callProcedure` function. |
+
 
 * * *
 
@@ -1524,6 +1544,20 @@ Releases the connection if it is attached. The connection is released back to th
 
 * * *
 
+<a name="SQLParameter"></a>
+
+## SQLParameter
+**Kind**: global typedef  
+
+| Param | Type |
+| --- | --- |
+| value | <code>\*</code> | 
+| type | [<code>TDSType</code>](#Query.TDSType) | 
+| options | <code>Object</code> | 
+
+
+* * *
+
 <a name="QueryTypes"></a>
 
 ## QueryTypes
@@ -1631,7 +1665,7 @@ npm run doc
 ```
 
 ## Issues / Requests / Contributing
-Please utilize the [issues](issues/) on the project to report a problem or provide feedback. Additional contributors are welcome.
+Please utilize the [issues](https://github.com/chriseaton/rhino/issues) on the project to report a problem or provide feedback. Additional contributors are welcome.
 
 1. Make sure the issue is with `rhino` and *not* the [tedious](https://github.com/tediousjs/tedious/issues) package. 
 2. Gather details, your node and `rhino` version.
