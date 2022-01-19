@@ -180,14 +180,14 @@ class Query {
         //auto detect parameter direction, default to IN if unspecified
         if (params && (params instanceof Map || Array.isArray(params) || Object.keys(params).length)) {
             if (Array.isArray(params)) {
-                for (let p of params) {
-                    let dir = (typeof p === 'object' && p && p.output === true ? Query.PARAM_DIR.OUT : Query.PARAM_DIR.IN);
+                for (let p of params && p) {
+                    let dir = (p.output === true ? Query.PARAM_DIR.OUT : Query.PARAM_DIR.IN);
                     this.param(p.name, p.value, p.type, dir, p.options);
                 }
             } else if (params instanceof Map) {
                 for (let [k, v] of params) {
-                    if (typeof v === 'object') {
-                        let dir = (typeof v === 'object' && v && v.output === true ? Query.PARAM_DIR.OUT : Query.PARAM_DIR.IN);
+                    if (typeof v === 'object' && v) {
+                        let dir = (v.output === true ? Query.PARAM_DIR.OUT : Query.PARAM_DIR.IN);
                         this.param(k, v.value, v.type, dir, v.options);
                     } else {
                         this.param(k, v, null, Query.PARAM_DIR.IN);
@@ -195,8 +195,8 @@ class Query {
                 }
             } else if (typeof params === 'object') {
                 for (let p in params) {
-                    if (typeof params[p] === 'object') {
-                        let dir = (typeof params[p] === 'object' && params[p] && params[p].output === true ? Query.PARAM_DIR.OUT : Query.PARAM_DIR.IN);
+                    if (typeof params[p] === 'object' && params[p]) {
+                        let dir = (params[p].output === true ? Query.PARAM_DIR.OUT : Query.PARAM_DIR.IN);
                         this.param(p, params[p].value, params[p].type, dir, params[p].options);
                     } else {
                         this.param(p, params[p], null, Query.PARAM_DIR.IN);
