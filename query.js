@@ -186,7 +186,7 @@ class Query {
                 }
             } else if (params instanceof Map) {
                 for (let [k, v] of params) {
-                    if (typeof v === 'object' && v) {
+                    if (typeof v === 'object' && v && (v instanceof Date) === false && Buffer.isBuffer(v) === false) {
                         let dir = (v.output === true ? Query.PARAM_DIR.OUT : Query.PARAM_DIR.IN);
                         this.param(k, v.value, v.type, dir, v.options);
                     } else {
@@ -195,7 +195,7 @@ class Query {
                 }
             } else if (typeof params === 'object') {
                 for (let p in params) {
-                    if (typeof params[p] === 'object' && params[p]) {
+                    if (typeof params[p] === 'object' && params[p] && (params[p] instanceof Date) === false && Buffer.isBuffer(params[p]) === false) {
                         let dir = (params[p].output === true ? Query.PARAM_DIR.OUT : Query.PARAM_DIR.IN);
                         this.param(p, params[p].value, params[p].type, dir, params[p].options);
                     } else {
@@ -318,7 +318,7 @@ class Query {
                 }
             } else if (name instanceof Map) {
                 for (let [k, v] of name) {
-                    if (typeof v === 'object' && v) {
+                    if (typeof v === 'object' && v && (v instanceof Date) === false && Buffer.isBuffer(v) === false) {
                         this.param(k, v.value, v.type, Query.PARAM_DIR.IN, v.options);
                     } else {
                         this.param(k, v, null, Query.PARAM_DIR.IN);
@@ -326,7 +326,7 @@ class Query {
                 }
             } else if (typeof name === 'object') {
                 for (let p in name) {
-                    if (typeof name[p] === 'object' && name[p]) {
+                    if (typeof name[p] === 'object' && name[p] && (name[p] instanceof Date) === false && Buffer.isBuffer(name[p]) === false) {
                         this.param(p, name[p].value, name[p].type, Query.PARAM_DIR.IN, name[p].options);
                     } else {
                         this.param(p, name[p], null, Query.PARAM_DIR.IN);
@@ -364,7 +364,7 @@ class Query {
                 }
             } else if (name instanceof Map) {
                 for (let [k, v] of name) {
-                    if (typeof v === 'object' && v) {
+                    if (typeof v === 'object' && v && (v instanceof Date) === false && Buffer.isBuffer(v) === false) {
                         this.param(k, v.value, v.type, Query.PARAM_DIR.OUT, v.options);
                     } else {
                         this.param(k, v, null, Query.PARAM_DIR.OUT);
@@ -372,7 +372,7 @@ class Query {
                 }
             } else if (typeof name === 'object') {
                 for (let p in name) {
-                    if (typeof name[p] === 'object' && name[p]) {
+                    if (typeof name[p] === 'object' && name[p] && (name[p] instanceof Date) === false && Buffer.isBuffer(name[p]) === false) {
                         this.param(p, name[p].value, name[p].type, Query.PARAM_DIR.OUT, name[p].options);
                     } else {
                         this.param(p, name[p], null, Query.PARAM_DIR.OUT);
