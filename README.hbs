@@ -2,6 +2,7 @@
 
 [![NPM](https://img.shields.io/npm/v/rhino)](https://npmjs.org/package/rhino)
 [![License](https://img.shields.io/npm/l/rhino)](https://npmjs.org/package/rhino)
+[![Downloads](https://img.shields.io/npm/dt/rhino)](https://npmjs.org/package/rhino)
 
 # Rhino
 
@@ -53,7 +54,7 @@ const rhino = require('rhino');
 
 ...
 let db = await rhino.create({
-    //tedious config options
+    //tedious config options, see: https://tediousjs.github.io/tedious/api-connection.html
     server: 'localhost',
     authentication: {
         options: {  
