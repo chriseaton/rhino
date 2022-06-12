@@ -1,1 +1,0 @@
-DROP DATABASE rhino_test;
