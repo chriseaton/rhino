@@ -42,6 +42,24 @@ describe('#query', () => {
         afterAll(() => {
             db.destroy();
         });
+        test('throws properly on connection is lost or resets (unstable connection).', async () => {
+            let db = rhino.create();
+            expect.assertions(2);
+            try {
+                await db.ping();
+                let conn = db._pool.free[0].resource;
+                let p = db.query('WAITFOR DELAY \'00:00:05\';');
+                //simulate a unexpected termination of the connection.
+                await new Promise((r) => setTimeout(r, 1000));
+                conn._tdsConnection.socket.end(); 
+                await p;
+            } catch (err) {
+                expect(err).toBeTruthy();
+                expect(err.code).toBe('ESOCKET');
+            } finally {
+                db.destroy();
+            }
+        }, 10000);
         test('runs a simple non-data select query returning row objects.', async () => {
             let db = rhino.create({
                 options: {

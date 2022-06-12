@@ -4,7 +4,7 @@
     "description": "Rhino is a production-focused Microsoft SQL Server driver for Node.JS.",
     "main": "rhino.js",
     "engines": {
-        "node": ">= 4"
+        "node": ">=12.3.0"
     },
     "scripts": {
         "test": "./node_modules/jest/bin/jest.js",
@@ -35,7 +35,7 @@
     "homepage": "https://github.com/chriseaton/rhino#readme",
     "dependencies": {
         "tarn": "^2.0.0",
-        "tedious": "^14.0.0"
+        "tedious": "^14.6.0"
     },
     "devDependencies": {
         "@types/jest": "^27.0.3",

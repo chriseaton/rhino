@@ -84,6 +84,7 @@ class ConnectedQuery extends Query {
                         conn.log.error(err);
                     }
                     context.tracker.removeFrom(context.req);
+                    context.tracker.removeFrom(conn._tdsConnection);
                     reject(err);
                 }
             });
@@ -99,13 +100,23 @@ class ConnectedQuery extends Query {
                     context.req.addParameter(key, value.type, value.value, value.options);
                 }
             }
-            //add event listeners
+            //add event listeners to connect (for socket errors)
+            let connectionErrorHandler = (err) => {
+                if (err) {
+                    context.tracker.removeFrom(context.req);
+                    context.tracker.removeFrom(conn._tdsConnection);
+                    reject(err);
+                }
+            };
+            context.tracker.registerOn(conn._tdsConnection, 'error', connectionErrorHandler);
+            //add event listeners to request
             let errorHandler = (err) => {
                 if (err) {
                     if (conn.log) {
                         conn.log.error(err);
                     }
                     context.tracker.removeFrom(context.req);
+                    context.tracker.removeFrom(conn._tdsConnection);
                 }
             };
             let colHandler = (columns) => {
@@ -167,6 +178,7 @@ class ConnectedQuery extends Query {
             };
             let completeHandler = () => {
                 context.tracker.removeFrom(context.req);
+                context.tracker.removeFrom(conn._tdsConnection);
                 if (context.results.length === 1) {
                     resolve(context.results[0]);
                 } else {

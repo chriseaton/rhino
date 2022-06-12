@@ -95,7 +95,7 @@ class Connection extends EventEmitter {
          * @type {Connection.TediousConfiguration}
          */
         this.config = tdsConfig;
-        
+
         /**
          * @type {Log}
          */
@@ -254,7 +254,7 @@ class Connection extends EventEmitter {
             et.registerOn(conn, 'connect', connectHandler);
             et.registerOn(conn, 'error', errorHandler);
             conn.connect();
-        });        
+        });
     }
 
     /**
